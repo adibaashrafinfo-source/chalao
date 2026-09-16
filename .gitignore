@@ -1,0 +1,23 @@
+# deps
+node_modules/
+.pnpm-store/
+
+# next
+.next/
+out/
+next-env.d.ts
+*.tsbuildinfo
+
+# env — never commit real keys
+.env
+.env*.local
+!.env.example
+
+# supabase local
+supabase/.temp/
+supabase/.branches/
+
+# misc
+.DS_Store
+*.log
+.vercel

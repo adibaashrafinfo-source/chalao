@@ -1,0 +1,208 @@
+@import "tailwindcss";
+@import "tw-animate-css";
+
+/*
+ * F-Commerce OS design tokens — light mode only (Brief §3.2).
+ * There is intentionally no dark-mode block and no theme toggle.
+ */
+:root {
+  /* Brand core — from official style guide */
+  --brand-lime: #9fe870;
+  --brand-lime-hover: #8adb58;
+  --brand-lime-tint: #e9fbdd;
+  --brand-dark: #062f28;
+  --brand-grey: #7b7b7b;
+
+  /* Neutral surfaces */
+  --bg-app: #f3f4f1;
+  --bg-surface: #ffffff;
+  --bg-surface-alt: #f7f8f6;
+  --border-subtle: #eaebe7;
+
+  /* Text */
+  --text-primary: #0f1b18;
+  --text-secondary: #7b7b7b;
+  --text-muted: #ababab;
+
+  /* Semantic */
+  --success: #16a34a;
+  --success-tint: #e9fbdd;
+  --warning: #f59e0b;
+  --warning-tint: #fef3c7;
+  --danger: #ef4444;
+  --danger-tint: #fee2e2;
+  --info: #3b82f6;
+
+  /* shadcn/ui semantic slots, mapped onto the brand tokens above */
+  --radius: 1.25rem; /* 20px base → cards resolve to 20–24px */
+  --background: var(--bg-app);
+  --foreground: var(--text-primary);
+  --card: var(--bg-surface);
+  --card-foreground: var(--text-primary);
+  --popover: var(--bg-surface);
+  --popover-foreground: var(--text-primary);
+  --primary: var(--brand-lime); /* bright pill — dark text passes contrast, white does not */
+  --primary-foreground: var(--brand-dark);
+  --secondary: var(--brand-dark); /* dark pill */
+  --secondary-foreground: #ffffff;
+  --muted: var(--bg-surface-alt);
+  --muted-foreground: var(--text-secondary);
+  --accent: var(--bg-surface-alt);
+  --accent-foreground: var(--brand-dark);
+  --destructive: var(--danger);
+  --border: var(--border-subtle);
+  --input: var(--border-subtle);
+  --ring: var(--brand-lime);
+
+  /* Charts: dark primary series, lime secondary, grey "other" */
+  --chart-1: var(--brand-dark);
+  --chart-2: var(--brand-lime);
+  --chart-3: #d4d6d0;
+  --chart-4: var(--brand-grey);
+  --chart-5: var(--brand-lime-tint);
+}
+
+@theme inline {
+  /* Brand utilities: bg-brand-lime, text-brand-dark, bg-surface-alt, … */
+  --color-brand-lime: var(--brand-lime);
+  --color-brand-lime-hover: var(--brand-lime-hover);
+  --color-brand-lime-tint: var(--brand-lime-tint);
+  --color-brand-dark: var(--brand-dark);
+  --color-brand-grey: var(--brand-grey);
+
+  --color-app: var(--bg-app);
+  --color-surface: var(--bg-surface);
+  --color-surface-alt: var(--bg-surface-alt);
+  --color-border-subtle: var(--border-subtle);
+
+  --color-text-primary: var(--text-primary);
+  --color-text-secondary: var(--text-secondary);
+  --color-text-muted: var(--text-muted);
+
+  --color-success: var(--success);
+  --color-success-tint: var(--success-tint);
+  --color-warning: var(--warning);
+  --color-warning-tint: var(--warning-tint);
+  --color-danger: var(--danger);
+  --color-danger-tint: var(--danger-tint);
+  --color-info: var(--info);
+
+  /* shadcn slots */
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+  --color-chart-1: var(--chart-1);
+  --color-chart-2: var(--chart-2);
+  --color-chart-3: var(--chart-3);
+  --color-chart-4: var(--chart-4);
+  --color-chart-5: var(--chart-5);
+
+  /* Large, soft radii (Brief §3.4) */
+  --radius-sm: calc(var(--radius) - 8px); /* 12px */
+  --radius-md: calc(var(--radius) - 4px); /* 16px */
+  --radius-lg: var(--radius); /* 20px */
+  --radius-xl: calc(var(--radius) + 4px); /* 24px — cards/panels */
+  --radius-2xl: calc(var(--radius) + 12px); /* 32px — marketing frames */
+
+  /* Fonts: Jakarta for display/UI labels, Inter for body/tables, Hind Siliguri for Bangla glyphs */
+  --font-sans: var(--font-inter), var(--font-bangla), ui-sans-serif, system-ui, sans-serif;
+  --font-display: var(--font-jakarta), var(--font-bangla), ui-sans-serif, system-ui, sans-serif;
+
+  /* Type scale: 12/14/16/20/24/32/48 */
+  --text-xs: 0.75rem;
+  --text-sm: 0.875rem;
+  --text-base: 1rem;
+  --text-xl: 1.25rem;
+  --text-2xl: 1.5rem;
+  --text-3xl: 2rem;
+  --text-5xl: 3rem; /* marketing hero only */
+}
+
+/* Minimal shadows — separation comes from white-on-grey contrast */
+@theme {
+  --shadow-2xs: 0 1px 2px rgb(0 0 0 / 0.03);
+  --shadow-xs: 0 1px 3px rgb(0 0 0 / 0.04);
+  --shadow-sm: 0 1px 3px rgb(0 0 0 / 0.04);
+  --shadow: 0 1px 3px rgb(0 0 0 / 0.04);
+  --shadow-md: 0 4px 16px rgb(6 47 40 / 0.05);
+  --shadow-lg: 0 12px 40px rgb(6 47 40 / 0.08); /* marketing screenshot frame, auth card */
+  --shadow-xl: 0 12px 40px rgb(6 47 40 / 0.08);
+}
+
+/* Hero dashboard mockup animations (marketing only) */
+@theme {
+  --animate-bar-grow: bar-grow 0.9s cubic-bezier(0.22, 1, 0.36, 1) both;
+  --animate-rise: rise 0.7s cubic-bezier(0.22, 1, 0.36, 1) both;
+  --animate-shine: shine 7s ease-in-out 2s infinite;
+}
+
+@keyframes bar-grow {
+  from {
+    transform: scaleY(0);
+  }
+  to {
+    transform: scaleY(1);
+  }
+}
+
+@keyframes rise {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@keyframes shine {
+  0% {
+    transform: translateX(-130%) skewX(-12deg);
+  }
+  45%,
+  100% {
+    transform: translateX(260%) skewX(-12deg);
+  }
+}
+
+@layer base {
+  html {
+    color-scheme: light;
+  }
+  @media (prefers-reduced-motion: no-preference) {
+    html {
+      scroll-behavior: smooth;
+    }
+  }
+  * {
+    @apply border-border outline-ring/50;
+  }
+  body {
+    @apply bg-background text-foreground font-sans antialiased;
+  }
+  h1,
+  h2,
+  h3,
+  h4,
+  h5,
+  h6 {
+    @apply font-display text-brand-dark;
+    letter-spacing: -0.01em;
+  }
+}
