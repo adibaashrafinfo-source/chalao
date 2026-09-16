@@ -17,7 +17,7 @@ import {
 } from "lucide-react";
 
 import { signOutAction } from "@/app/(auth)/actions";
-import { LogoMark } from "@/components/brand/logo";
+import { Logo } from "@/components/brand/logo";
 import type { Messages } from "@/lib/i18n";
 import { cn } from "@/lib/utils";
 
@@ -78,9 +78,8 @@ export function Sidebar({
 
   return (
     <aside className="hidden w-[260px] shrink-0 flex-col gap-5 border-r border-border-subtle bg-surface p-4 lg:flex">
-      <Link href="/dashboard" className="flex items-center gap-2.5 px-1 pt-1">
-        <LogoMark className="size-8" />
-        <span className="font-display text-base font-bold text-brand-dark">Chalao</span>
+      <Link href="/dashboard" className="flex items-center px-1 pt-1">
+        <Logo height="h-8" />
       </Link>
 
       <div className="flex items-center gap-2.5 rounded-full bg-surface-alt p-1.5 pr-3">

@@ -4,10 +4,10 @@ import { useEffect, useState } from "react";
 
 import { cn } from "@/lib/utils";
 
-// Drop the artwork at public/chalao-logo.png (or .svg and change this path) and it
-// appears everywhere. Until then — or if the file ever goes missing — the drawn mark
-// below is used instead, so the header never renders a broken image.
-const LOGO_SRC = "/chalao-logo.png";
+// chalao-logo.png is the original artwork (white background); the -transparent variant
+// is the same logo with the white knocked out and the empty margin trimmed, which is
+// what the UI uses. Until the file exists, the drawn mark stands in.
+const LOGO_SRC = "/chalao-logo-transparent.png";
 
 export function LogoMark({ className }: { className?: string }) {
   return (
@@ -19,7 +19,7 @@ export function LogoMark({ className }: { className?: string }) {
   );
 }
 
-function Wordmark({ inverted }: { inverted: boolean }) {
+function Fallback({ inverted }: { inverted: boolean }) {
   return (
     <span className="inline-flex items-center gap-2.5">
       <LogoMark />
@@ -35,30 +35,48 @@ function Wordmark({ inverted }: { inverted: boolean }) {
   );
 }
 
-export function Logo({ className, inverted = false }: { className?: string; inverted?: boolean }) {
-  // Start with the drawn mark and only swap in the artwork once it has actually loaded.
-  // Probing first avoids the broken-image icon an onError fallback would flash, because
-  // the server-rendered <img> can fail before React has attached its handler.
+export function Logo({
+  className,
+  inverted = false,
+  height = "h-11",
+}: {
+  className?: string;
+  inverted?: boolean;
+  /** Tailwind height class — the width follows the artwork's own proportions. */
+  height?: string;
+}) {
+  // Probe the file first. A server-rendered <img> can fail before React attaches an
+  // onError handler, which would flash the broken-image icon.
   const [imageReady, setImageReady] = useState(false);
 
   useEffect(() => {
-    if (inverted) return;
-
     const probe = new Image();
     probe.src = LOGO_SRC;
     probe.onload = () => setImageReady(true);
-  }, [inverted]);
+  }, []);
 
-  // The artwork is dark green, so it would disappear on the dark footer — those places
-  // keep the drawn mark with white text.
+  if (!imageReady) {
+    return (
+      <span className={cn("inline-flex items-center", className)}>
+        <Fallback inverted={inverted} />
+      </span>
+    );
+  }
+
   return (
     <span className={cn("inline-flex items-center", className)}>
-      {imageReady && !inverted ? (
-        // eslint-disable-next-line @next/next/no-img-element
-        <img src={LOGO_SRC} alt="Chalao" className="h-9 w-auto" />
-      ) : (
-        <Wordmark inverted={inverted} />
-      )}
+      {/* eslint-disable-next-line @next/next/no-img-element */}
+      <img
+        src={LOGO_SRC}
+        alt="Chalao"
+        className={cn(
+          height,
+          "w-auto",
+          // The wordmark is dark green, so on the dark footer the logo is flattened to
+          // a white silhouette to stay readable.
+          inverted && "brightness-0 invert",
+        )}
+      />
     </span>
   );
 }
