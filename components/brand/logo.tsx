@@ -1,4 +1,13 @@
+"use client";
+
+import { useEffect, useState } from "react";
+
 import { cn } from "@/lib/utils";
+
+// Drop the artwork at public/chalao-logo.png (or .svg and change this path) and it
+// appears everywhere. Until then — or if the file ever goes missing — the drawn mark
+// below is used instead, so the header never renders a broken image.
+const LOGO_SRC = "/chalao-logo.png";
 
 export function LogoMark({ className }: { className?: string }) {
   return (
@@ -10,9 +19,9 @@ export function LogoMark({ className }: { className?: string }) {
   );
 }
 
-export function Logo({ className, inverted = false }: { className?: string; inverted?: boolean }) {
+function Wordmark({ inverted }: { inverted: boolean }) {
   return (
-    <span className={cn("inline-flex items-center gap-2.5", className)}>
+    <span className="inline-flex items-center gap-2.5">
       <LogoMark />
       <span
         className={cn(
@@ -20,8 +29,36 @@ export function Logo({ className, inverted = false }: { className?: string; inve
           inverted ? "text-white" : "text-brand-dark",
         )}
       >
-        F-Commerce OS
+        Chalao
       </span>
+    </span>
+  );
+}
+
+export function Logo({ className, inverted = false }: { className?: string; inverted?: boolean }) {
+  // Start with the drawn mark and only swap in the artwork once it has actually loaded.
+  // Probing first avoids the broken-image icon an onError fallback would flash, because
+  // the server-rendered <img> can fail before React has attached its handler.
+  const [imageReady, setImageReady] = useState(false);
+
+  useEffect(() => {
+    if (inverted) return;
+
+    const probe = new Image();
+    probe.src = LOGO_SRC;
+    probe.onload = () => setImageReady(true);
+  }, [inverted]);
+
+  // The artwork is dark green, so it would disappear on the dark footer — those places
+  // keep the drawn mark with white text.
+  return (
+    <span className={cn("inline-flex items-center", className)}>
+      {imageReady && !inverted ? (
+        // eslint-disable-next-line @next/next/no-img-element
+        <img src={LOGO_SRC} alt="Chalao" className="h-9 w-auto" />
+      ) : (
+        <Wordmark inverted={inverted} />
+      )}
     </span>
   );
 }

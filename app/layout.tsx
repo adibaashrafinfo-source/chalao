@@ -26,8 +26,8 @@ const bangla = Hind_Siliguri({
 
 export const metadata: Metadata = {
   title: {
-    default: "F-Commerce OS",
-    template: "%s · F-Commerce OS",
+    default: "Chalao",
+    template: "%s · Chalao",
   },
   description:
     "Orders, customers, inventory, couriers, COD and profit for Facebook & Instagram sellers — in one dashboard.",

@@ -53,7 +53,7 @@ export default async function OrganizationSettingsPage() {
             }}
           />
 
-          {/* Only the people who run F-Commerce OS itself see this. */}
+          {/* Only the people who run Chalao itself see this. */}
           {admin && (
             <Link
               href="/settings/site"

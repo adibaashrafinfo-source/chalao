@@ -1,7 +1,7 @@
 // Source of truth for message keys. Every other locale must satisfy `Messages`.
 export const en = {
   common: {
-    appName: "F-Commerce OS",
+    appName: "Chalao",
     login: "Login",
     startFree: "Start Free",
     bookDemo: "Book a Demo",
@@ -10,7 +10,7 @@ export const en = {
 
   marketing: {
     meta: {
-      title: "F-Commerce OS — Orders to COD in one dashboard",
+      title: "Chalao — Orders to COD in one dashboard",
       description:
         "Orders, customers, inventory, couriers, COD and profit for Facebook & Instagram sellers in Bangladesh — from a single dashboard.",
     },
@@ -28,7 +28,7 @@ export const en = {
       titleAfter: "",
       subtitle: "Orders, customers, inventory, couriers, COD and profit — from a single dashboard.",
       note: "No credit card required",
-      previewLabel: "Preview of the F-Commerce OS dashboard, shown with sample data",
+      previewLabel: "Preview of the Chalao dashboard, shown with sample data",
     },
     lifecycle: {
       eyebrow: "How it works",
@@ -176,7 +176,7 @@ export const en = {
       privacy: "Privacy Policy",
       terms: "Terms of Service",
       soon: "Soon",
-      rights: "© {year} F-Commerce OS. All rights reserved.",
+      rights: "© {year} Chalao. All rights reserved.",
     },
   },
 

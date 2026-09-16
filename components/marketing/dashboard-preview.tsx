@@ -134,7 +134,7 @@ export function DashboardPreview({ label }: { label: string }) {
           <aside className="flex w-[240px] shrink-0 flex-col gap-4 border-r border-border-subtle bg-surface p-4">
             <div className="flex items-center gap-2 px-1 pt-1">
               <LogoMark className="size-7" />
-              <span className="font-display text-sm font-bold text-brand-dark">F-Commerce OS</span>
+              <span className="font-display text-sm font-bold text-brand-dark">Chalao</span>
             </div>
 
             <div className="flex items-center gap-2 rounded-full bg-surface-alt p-1.5 pr-3">

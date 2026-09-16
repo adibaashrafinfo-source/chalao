@@ -7,7 +7,7 @@ export const bn: Messages = {
 
   marketing: {
     meta: {
-      title: "F-Commerce OS — Order থেকে COD, এক dashboard-এ",
+      title: "Chalao — Order থেকে COD, এক dashboard-এ",
       description:
         "Facebook ও Instagram seller-দের জন্য orders, customers, inventory, couriers, COD আর profit — এক dashboard থেকে।",
     },
@@ -19,7 +19,7 @@ export const bn: Messages = {
       titleAfter: " ম্যানেজ করুন",
       subtitle: en.marketing.hero.subtitle,
       note: "Credit card লাগবে না",
-      previewLabel: "F-Commerce OS dashboard-এর preview, নমুনা data দিয়ে দেখানো",
+      previewLabel: "Chalao dashboard-এর preview, নমুনা data দিয়ে দেখানো",
     },
     lifecycle: {
       eyebrow: "How it works",
