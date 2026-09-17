@@ -4,8 +4,8 @@ import { QueryProvider } from "@/components/providers/query-provider";
 import { Sidebar } from "@/components/dashboard/sidebar";
 import { getMessages } from "@/lib/i18n";
 import { isPlatformAdmin } from "@/lib/site-settings";
-import { createClient } from "@/lib/supabase/server";
 import { getMembership } from "@/lib/supabase/queries";
+import { getCurrentUser } from "@/lib/supabase/user";
 
 // Every dashboard screen depends on the signed-in user, so none of them are
 // prerendered at build time.
@@ -13,18 +13,18 @@ export const dynamic = "force-dynamic";
 
 export default async function DashboardLayout({ children }: { children: React.ReactNode }) {
   const t = getMessages("en");
-  const supabase = await createClient();
 
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  // One round trip each, in parallel. Doing these one after another was most of
+  // the delay on every navigation.
+  const [user, membership, admin] = await Promise.all([
+    getCurrentUser(),
+    getMembership(),
+    isPlatformAdmin(),
+  ]);
+
   if (!user) redirect("/login");
-
   // Brief §6.1: no organization means onboarding isn't finished.
-  const membership = await getMembership();
   if (!membership) redirect("/onboarding");
-
-  const admin = await isPlatformAdmin();
 
   return (
     <QueryProvider>

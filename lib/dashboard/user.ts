@@ -1,14 +1,10 @@
 import "server-only";
 
-import { createClient } from "@/lib/supabase/server";
+import { getCurrentUser } from "@/lib/supabase/user";
 
 /** Initials for the top-bar avatar, from the signed-in user's name or email. */
 export async function getUserInitials(): Promise<string> {
-  const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-
+  const user = await getCurrentUser();
   const source = (user?.user_metadata?.full_name as string | undefined) ?? user?.email ?? "";
 
   return (

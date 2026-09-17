@@ -1,5 +1,7 @@
 import "server-only";
 
+import { cache } from "react";
+
 import { createClient } from "@/lib/supabase/server";
 
 export type Membership = {
@@ -8,8 +10,11 @@ export type Membership = {
   role: string;
 };
 
-/** The signed-in user's organization, or null if they still need onboarding. */
-export async function getMembership(): Promise<Membership | null> {
+/**
+ * The signed-in user's organization, or null if they still need onboarding.
+ * Cached per request: the layout and the page below it both ask for it.
+ */
+export const getMembership = cache(async function getMembership(): Promise<Membership | null> {
   const supabase = await createClient();
 
   const { data, error } = await supabase
@@ -29,4 +34,4 @@ export async function getMembership(): Promise<Membership | null> {
     organizationName: organization?.name ?? "",
     role: data.role as string,
   };
-}
+});

@@ -23,6 +23,14 @@ export async function updateSession(request: NextRequest) {
   const env = getSupabaseEnv();
   if (!env) return response;
 
+  const { pathname } = request.nextUrl;
+  const isProtected = PROTECTED_PREFIXES.some((p) => pathname === p || pathname.startsWith(`${p}/`));
+  const isAuthPage = AUTH_PAGES.includes(pathname);
+
+  // Marketing pages don't depend on who is looking, so don't spend a call to the
+  // Auth server on them.
+  if (!isProtected && !isAuthPage) return response;
+
   const supabase = createServerClient(env.url, env.anonKey, {
     cookies: {
       getAll() {
@@ -41,9 +49,6 @@ export async function updateSession(request: NextRequest) {
     data: { user },
   } = await supabase.auth.getUser();
 
-  const { pathname } = request.nextUrl;
-  const isProtected = PROTECTED_PREFIXES.some((p) => pathname === p || pathname.startsWith(`${p}/`));
-
   if (!user && isProtected) {
     const url = request.nextUrl.clone();
     url.pathname = "/login";
@@ -51,7 +56,7 @@ export async function updateSession(request: NextRequest) {
     return NextResponse.redirect(url);
   }
 
-  if (user && AUTH_PAGES.includes(pathname)) {
+  if (user && isAuthPage) {
     const url = request.nextUrl.clone();
     url.pathname = "/dashboard";
     url.search = "";

@@ -1,10 +1,12 @@
 import "server-only";
 
+import { cache } from "react";
 import { unstable_cache } from "next/cache";
 import { createClient as createPublicClient } from "@supabase/supabase-js";
 
 import { getSupabaseEnv } from "@/lib/env";
 import { createClient } from "@/lib/supabase/server";
+import { getCurrentUser } from "@/lib/supabase/user";
 
 export type SocialKey = "facebook" | "instagram" | "youtube" | "tiktok" | "linkedin" | "whatsapp";
 
@@ -61,13 +63,12 @@ export const getSiteSettings = unstable_cache(
   { revalidate: 300, tags: [SITE_SETTINGS_TAG] },
 );
 
-export async function isPlatformAdmin(): Promise<boolean> {
-  const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+/** Cached per request: the layout, the sidebar and admin pages all ask. */
+export const isPlatformAdmin = cache(async function isPlatformAdmin(): Promise<boolean> {
+  const user = await getCurrentUser();
   if (!user) return false;
 
+  const supabase = await createClient();
   const { data } = await supabase
     .from("platform_admins")
     .select("user_id")
@@ -75,4 +76,4 @@ export async function isPlatformAdmin(): Promise<boolean> {
     .maybeSingle();
 
   return Boolean(data);
-}
+});
