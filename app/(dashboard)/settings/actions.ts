@@ -1,9 +1,10 @@
 "use server";
 
-import { revalidatePath } from "next/cache";
+import { revalidatePath, revalidateTag } from "next/cache";
 import { redirect } from "next/navigation";
 import { z } from "zod";
 
+import { SITE_SETTINGS_TAG } from "@/lib/site-settings";
 import { createClient } from "@/lib/supabase/server";
 import { getMembership } from "@/lib/supabase/queries";
 import { businessTypeValues } from "@/lib/validations/onboarding";
@@ -76,8 +77,8 @@ export async function updateSiteSettingsAction(values: unknown): Promise<ActionR
 
   if (error) return { error: error.message };
 
-  // The footer is rendered by the marketing layout, so refresh those pages too.
+  // Drop the cached copy so the public footer picks the change up immediately.
+  revalidateTag(SITE_SETTINGS_TAG);
   revalidatePath("/settings/site");
-  revalidatePath("/", "layout");
   return {};
 }
