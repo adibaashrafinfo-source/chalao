@@ -3,7 +3,10 @@ import type { EmailOtpType } from "@supabase/supabase-js";
 
 import { createClient } from "@/lib/supabase/server";
 
-// Target of the signup confirmation email.
+// Target of the signup confirmation email. Never prerendered: it needs the live
+// request and a Supabase session.
+export const dynamic = "force-dynamic";
+
 export async function GET(request: NextRequest) {
   const { searchParams, origin } = request.nextUrl;
   const tokenHash = searchParams.get("token_hash");

@@ -6,6 +6,10 @@ import { getMessages } from "@/lib/i18n";
 import { createClient } from "@/lib/supabase/server";
 import { getMembership } from "@/lib/supabase/queries";
 
+// Every dashboard screen depends on the signed-in user, so none of them are
+// prerendered at build time.
+export const dynamic = "force-dynamic";
+
 export default async function DashboardLayout({ children }: { children: React.ReactNode }) {
   const t = getMessages("en");
   const supabase = await createClient();

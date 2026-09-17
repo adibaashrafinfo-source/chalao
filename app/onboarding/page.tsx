@@ -12,6 +12,9 @@ const t = getMessages("en");
 
 export const metadata: Metadata = { title: t.onboarding.metaTitle };
 
+// Depends on the signed-in user; must not be prerendered at build time.
+export const dynamic = "force-dynamic";
+
 export default async function OnboardingPage() {
   const supabase = await createClient();
   const {
