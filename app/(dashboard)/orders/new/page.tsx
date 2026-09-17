@@ -2,11 +2,13 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { ArrowLeft, Package } from "lucide-react";
 
+import { LimitNotice } from "@/components/billing/limit-notice";
 import { Topbar } from "@/components/dashboard/topbar";
 import { OrderForm, type VariantOption } from "@/components/orders/order-form";
 import { Button } from "@/components/ui/button";
 import { getUserInitials } from "@/lib/dashboard/user";
 import { getMessages } from "@/lib/i18n";
+import { getOrderGate } from "@/lib/subscription";
 import { createClient } from "@/lib/supabase/server";
 import { getMembership } from "@/lib/supabase/queries";
 
@@ -27,6 +29,8 @@ export default async function NewOrderPage() {
   const membership = await getMembership();
   const supabase = await createClient();
   const initials = await getUserInitials();
+
+  const gate = await getOrderGate(membership?.organizationId ?? "");
 
   const { data } = await supabase
     .from("product_variants")
@@ -73,7 +77,10 @@ export default async function NewOrderPage() {
             {t.orders.backToList}
           </Link>
 
-          {variants.length === 0 ? (
+          {/* No point offering the form when the database would refuse the order. */}
+          {!gate.allowed ? (
+            <LimitNotice limits={t.limits} gate={gate} variant="card" />
+          ) : variants.length === 0 ? (
             <div className="flex flex-col items-center justify-center gap-3 rounded-xl bg-surface px-6 py-16 text-center shadow-xs">
               <span className="flex size-12 items-center justify-center rounded-full bg-surface-alt text-brand-dark">
                 <Package className="size-5" aria-hidden="true" />
@@ -85,7 +92,10 @@ export default async function NewOrderPage() {
               </Button>
             </div>
           ) : (
-            <OrderForm orders={t.orders} variants={variants} />
+            <>
+              <LimitNotice limits={t.limits} gate={gate} />
+              <OrderForm orders={t.orders} variants={variants} />
+            </>
           )}
         </div>
       </main>

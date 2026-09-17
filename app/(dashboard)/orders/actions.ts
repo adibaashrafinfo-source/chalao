@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 
 import { getMessages } from "@/lib/i18n";
+import { gateReasonFromError } from "@/lib/subscription";
 import { createClient } from "@/lib/supabase/server";
 import { getMembership } from "@/lib/supabase/queries";
 import { orderCreateSchema, orderDetailsSchema, orderItemSchema } from "@/lib/validations/order";
@@ -128,7 +129,12 @@ export async function createOrderAction(values: unknown): Promise<ActionResult> 
     .select("id")
     .single();
 
-  if (orderError) return { error: orderError.message };
+  if (orderError) {
+    // The subscription trigger speaks in codes; say it in words instead.
+    const reason = gateReasonFromError(orderError.message);
+    if (reason) return { error: t.limits.blockedTitle[reason] };
+    return { error: orderError.message };
+  }
 
   const rows = input.items.map((item) => {
     const variant = variantMap.get(item.variantId);

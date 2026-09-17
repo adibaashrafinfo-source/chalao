@@ -582,6 +582,26 @@ export const en = {
     },
   },
 
+  limits: {
+    // Shown when the database refuses a new order, and as a warning before it does.
+    blockedTitle: {
+      ORDER_LIMIT_REACHED: "You have used this month's orders",
+      SUBSCRIPTION_EXPIRED: "Your plan has ended",
+      SUBSCRIPTION_SUSPENDED: "This account is on hold",
+    },
+    blockedBody: {
+      ORDER_LIMIT_REACHED:
+        "Your plan allows {limit} orders a month and you have created {used}. Everything already here stays as it is — renew or move up a plan to take new orders.",
+      SUBSCRIPTION_EXPIRED:
+        "New orders are paused. Your products, customers and past orders are all still here, and come back the moment you renew.",
+      SUBSCRIPTION_SUSPENDED: "Please contact support to reopen this account.",
+    },
+    goToBilling: "Go to billing",
+    graceWarning: "Your plan has ended. New orders stop after {date} unless you renew.",
+    nearLimit: "{left} of your {limit} monthly orders are left.",
+    dismissed: "Understood",
+  },
+
   billing: {
     title: "Billing",
     subtitle: "Your plan, your usage, and how to pay",

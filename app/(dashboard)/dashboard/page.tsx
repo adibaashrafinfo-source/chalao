@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { CircleCheck, Clock, PackageX, TriangleAlert, Truck, type LucideIcon } from "lucide-react";
 
+import { LimitNotice } from "@/components/billing/limit-notice";
 import { RevenueChart } from "@/components/dashboard/revenue-chart";
 import { StatCard } from "@/components/dashboard/stat-card";
 import { Topbar } from "@/components/dashboard/topbar";
@@ -9,6 +10,8 @@ import { getAlerts, getDashboardData, type AlertItem, type Range } from "@/lib/d
 import { getUserInitials } from "@/lib/dashboard/user";
 import { formatBDT, formatCount } from "@/lib/format";
 import { getMessages } from "@/lib/i18n";
+import { getOrderGate } from "@/lib/subscription";
+import { createClient } from "@/lib/supabase/server";
 import { getMembership } from "@/lib/supabase/queries";
 import { cn } from "@/lib/utils";
 
@@ -41,9 +44,16 @@ export default async function DashboardPage({
   const organizationId = membership?.organizationId ?? "";
   const initials = await getUserInitials();
 
-  const [{ stats, chart }, alerts] = await Promise.all([
+  const supabase = await createClient();
+  const [{ stats, chart }, alerts, gate, { data: subscription }] = await Promise.all([
     getDashboardData(organizationId, range),
     getAlerts(organizationId),
+    getOrderGate(organizationId),
+    supabase
+      .from("organization_subscriptions")
+      .select("current_period_end")
+      .eq("organization_id", organizationId)
+      .maybeSingle(),
   ]);
 
   const home = t.dashboard.home;
@@ -58,6 +68,12 @@ export default async function DashboardPage({
       />
 
       <main className="flex flex-1 flex-col gap-4 p-4 sm:p-6">
+        <LimitNotice
+          limits={t.limits}
+          gate={gate}
+          periodEnd={(subscription?.current_period_end as string | null) ?? null}
+        />
+
         {/* ---- stat cards ---- */}
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
           <StatCard

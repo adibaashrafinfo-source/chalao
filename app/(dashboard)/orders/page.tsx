@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { Plus, ShoppingBag } from "lucide-react";
 
+import { LimitNotice } from "@/components/billing/limit-notice";
 import { Topbar } from "@/components/dashboard/topbar";
 import { OrderFilters } from "@/components/orders/order-filters";
 import { Badge } from "@/components/ui/badge";
@@ -11,6 +12,7 @@ import { formatBDT } from "@/lib/format";
 import { getMessages } from "@/lib/i18n";
 import { orderSourceLabel, orderStatusLabel, orderStatusTone } from "@/lib/orders/status";
 import { formatPhone, normalizeBdPhone } from "@/lib/phone";
+import { getOrderGate } from "@/lib/subscription";
 import { createClient } from "@/lib/supabase/server";
 import { getMembership } from "@/lib/supabase/queries";
 
@@ -58,7 +60,7 @@ export default async function OrdersPage({
   if (from) query = query.gte("created_at", `${from}T00:00:00`);
   if (to) query = query.lte("created_at", `${to}T23:59:59`);
 
-  const { data, error } = await query;
+  const [{ data, error }, gate] = await Promise.all([query, getOrderGate(membership?.organizationId ?? "")]);
   let rows = (data ?? []) as OrderRow[];
 
   // Search matches the customer's name or phone; PostgREST can't filter on an
@@ -95,6 +97,7 @@ export default async function OrdersPage({
       />
 
       <main className="flex flex-1 flex-col gap-4 p-4 sm:p-6">
+        <LimitNotice limits={t.limits} gate={gate} />
         <OrderFilters orders={t.orders} />
 
         {error ? (
