@@ -6,6 +6,7 @@ import {
   Boxes,
   ChevronDown,
   CircleQuestionMark,
+  CreditCard,
   LayoutDashboard,
   LogOut,
   Package,
@@ -50,6 +51,7 @@ export function Sidebar({
 
   const preference: { href: string; label: string; icon: LucideIcon }[] = [
     ...(isPlatformAdmin ? [{ href: "/admin", label: nav.admin, icon: ShieldCheck }] : []),
+    { href: "/settings/billing", label: nav.billing, icon: CreditCard },
     { href: "/settings/organization", label: nav.settings, icon: Settings },
     { href: "/help", label: nav.help, icon: CircleQuestionMark },
   ];
