@@ -74,30 +74,29 @@ export const bn: Messages = {
       description: "Free-তে শুরু করুন, order বাড়লে upgrade করুন। কোনো hidden charge নেই।",
       perMonth: "/মাস",
       mostPopular: "Most Popular",
+      limits: {
+        orders: "মাসে {count}টি order",
+        ordersUnlimited: "Unlimited order",
+        users: "{count} জন user",
+        oneUser: "১ জন user",
+        usersUnlimited: "যত খুশি user",
+      },
       plans: {
         free: {
-          name: "Free",
-          tagline: "নতুন শুরু করা seller-দের জন্য",
           cta: "Start Free",
-          features: ["মাসে ৫০টি order", "১ জন user", "Order ও customer management", "Inventory tracking", "Steadfast courier booking"],
+          extras: ["Order ও customer management", "Inventory tracking", "Steadfast courier booking"],
         },
         starter: {
-          name: "Starter",
-          tagline: "নিয়মিত order পাওয়া page-এর জন্য",
           cta: "Get Starter",
-          features: ["মাসে ৫০০টি order", "২ জন user", "Free-এর সবকিছু", "Low-stock alert", "COD tracking"],
+          extras: ["Free-এর সবকিছু", "Low-stock alert", "COD tracking"],
         },
         growth: {
-          name: "Growth",
-          tagline: "দ্রুত বাড়তে থাকা ব্যবসার জন্য",
           cta: "Get Growth",
-          features: ["মাসে ২,০০০টি order", "৫ জন user", "Starter-এর সবকিছু", "পূর্ণ stock movement log", "Priority support"],
+          extras: ["Starter-এর সবকিছু", "পূর্ণ stock movement log", "Priority support"],
         },
         business: {
-          name: "Business",
-          tagline: "বড় team ও বেশি volume-এর জন্য",
           cta: "Get Business",
-          features: ["Unlimited order", "১৫ জন user", "Growth-এর সবকিছু", "Multiple store", "Dedicated onboarding"],
+          extras: ["Growth-এর সবকিছু", "Multiple store", "Dedicated onboarding"],
         },
         enterprise: {
           name: "Enterprise",

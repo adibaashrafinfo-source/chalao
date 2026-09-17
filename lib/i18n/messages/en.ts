@@ -86,42 +86,31 @@ export const en = {
       description: "Start free and upgrade as your orders grow. No hidden charges.",
       perMonth: "/month",
       mostPopular: "Most Popular",
+      // The order and user lines are built from the live plan limits, so the page stays
+      // truthful when an admin changes them. Only the extras below are fixed copy.
+      limits: {
+        orders: "{count} orders per month",
+        ordersUnlimited: "Unlimited orders",
+        users: "{count} users",
+        oneUser: "1 user",
+        usersUnlimited: "Unlimited users",
+      },
       plans: {
         free: {
-          name: "Free",
-          tagline: "For sellers just getting started",
           cta: "Start Free",
-          features: [
-            "50 orders per month",
-            "1 user",
-            "Order & customer management",
-            "Inventory tracking",
-            "Steadfast courier booking",
-          ],
+          extras: ["Order & customer management", "Inventory tracking", "Steadfast courier booking"],
         },
         starter: {
-          name: "Starter",
-          tagline: "For pages with regular orders",
           cta: "Get Starter",
-          features: ["500 orders per month", "2 users", "Everything in Free", "Low-stock alerts", "COD tracking"],
+          extras: ["Everything in Free", "Low-stock alerts", "COD tracking"],
         },
         growth: {
-          name: "Growth",
-          tagline: "For fast-growing businesses",
           cta: "Get Growth",
-          features: [
-            "2,000 orders per month",
-            "5 users",
-            "Everything in Starter",
-            "Full stock movement log",
-            "Priority support",
-          ],
+          extras: ["Everything in Starter", "Full stock movement log", "Priority support"],
         },
         business: {
-          name: "Business",
-          tagline: "For bigger teams and higher volume",
           cta: "Get Business",
-          features: ["Unlimited orders", "15 users", "Everything in Growth", "Multiple stores", "Dedicated onboarding"],
+          extras: ["Everything in Growth", "Multiple stores", "Dedicated onboarding"],
         },
         enterprise: {
           name: "Enterprise",
@@ -450,7 +439,27 @@ export const en = {
     nav: {
       organizations: "Businesses",
       payments: "Payments",
+      plans: "Plans & prices",
       site: "Site settings",
+    },
+
+    plans: {
+      title: "Plans & prices",
+      subtitle: "What each plan costs and how much it allows",
+      liveNote: "These go straight onto the public pricing page — a change here is visible to visitors right away.",
+      columns: {
+        plan: "Plan",
+        tagline: "Tagline",
+        price: "Monthly price",
+        orders: "Orders / month",
+        users: "Users",
+        featured: "Most Popular",
+        active: "Shown publicly",
+      },
+      unlimitedHint: "Leave empty for unlimited",
+      save: "Save plan",
+      saved: "Saved",
+      businessesOnPlan: "{count} on this plan",
     },
     stats: {
       businesses: "Businesses",

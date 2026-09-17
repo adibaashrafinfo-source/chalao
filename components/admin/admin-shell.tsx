@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { Building2, CreditCard, Globe } from "lucide-react";
+import { Building2, CreditCard, Globe, Tag } from "lucide-react";
 
 import type { Messages } from "@/lib/i18n";
 import { cn } from "@/lib/utils";
@@ -11,12 +11,13 @@ export function AdminTabs({
   pendingCount = 0,
 }: {
   admin: Messages["admin"];
-  active: "organizations" | "payments" | "site";
+  active: "organizations" | "payments" | "plans" | "site";
   pendingCount?: number;
 }) {
   const tabs = [
     { key: "organizations" as const, label: admin.nav.organizations, href: "/admin", icon: Building2 },
     { key: "payments" as const, label: admin.nav.payments, href: "/admin/payments", icon: CreditCard },
+    { key: "plans" as const, label: admin.nav.plans, href: "/admin/plans", icon: Tag },
     { key: "site" as const, label: admin.nav.site, href: "/settings/site", icon: Globe },
   ];
 

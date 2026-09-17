@@ -1,8 +1,9 @@
 "use server";
 
-import { revalidatePath } from "next/cache";
+import { revalidatePath, revalidateTag } from "next/cache";
 import { z } from "zod";
 
+import { PLANS_TAG } from "@/lib/plans";
 import { createClient } from "@/lib/supabase/server";
 import { isPlatformAdmin } from "@/lib/site-settings";
 
@@ -135,6 +136,65 @@ export async function recordPaymentAction(values: unknown): Promise<ActionResult
   if (error) return { error: error.message };
 
   refresh(parsed.data.organizationId);
+  return {};
+}
+
+const planEditSchema = z.object({
+  code: z.enum(["free", "starter", "growth", "business"]),
+  name: z.string().trim().min(1, "Name is required").max(60),
+  tagline: z.string().trim().max(160).optional(),
+  monthlyPrice: z.coerce.number().min(0).max(9_999_999),
+  // Empty means unlimited.
+  orderLimit: z.union([z.coerce.number().int().min(0).max(1_000_000), z.literal("")]).optional(),
+  userLimit: z.union([z.coerce.number().int().min(1).max(10_000), z.literal("")]).optional(),
+  isFeatured: z.boolean().default(false),
+  isActive: z.boolean().default(true),
+});
+
+/**
+ * Editing a plan changes what visitors see on the pricing page, so the cached copy is
+ * dropped immediately. Existing subscriptions keep their plan; only the terms change.
+ */
+export async function updatePlanAction(values: unknown): Promise<ActionResult> {
+  const denied = await requireAdmin();
+  if (denied) return denied;
+
+  const parsed = planEditSchema.safeParse(values);
+  if (!parsed.success) return { error: parsed.error.issues[0]?.message ?? "Invalid details" };
+
+  const supabase = await createClient();
+
+  // Only one plan may carry the badge, so clear the others first.
+  if (parsed.data.isFeatured) {
+    const { error: clearError } = await supabase
+      .from("subscription_plans")
+      .update({ is_featured: false })
+      .neq("code", parsed.data.code)
+      .eq("is_featured", true);
+
+    if (clearError) return { error: clearError.message };
+  }
+
+  const { error } = await supabase
+    .from("subscription_plans")
+    .update({
+      name: parsed.data.name,
+      tagline: parsed.data.tagline || null,
+      monthly_price: parsed.data.monthlyPrice,
+      order_limit: parsed.data.orderLimit === "" || parsed.data.orderLimit === undefined ? null : parsed.data.orderLimit,
+      user_limit: parsed.data.userLimit === "" || parsed.data.userLimit === undefined ? null : parsed.data.userLimit,
+      is_featured: parsed.data.isFeatured,
+      is_active: parsed.data.isActive,
+    })
+    .eq("code", parsed.data.code);
+
+  if (error) return { error: error.message };
+
+  revalidateTag(PLANS_TAG);
+  revalidatePath("/admin/plans");
+  revalidatePath("/admin");
+  revalidatePath("/pricing");
+  revalidatePath("/");
   return {};
 }
 
