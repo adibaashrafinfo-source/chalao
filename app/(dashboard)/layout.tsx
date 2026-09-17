@@ -3,6 +3,7 @@ import { redirect } from "next/navigation";
 import { QueryProvider } from "@/components/providers/query-provider";
 import { Sidebar } from "@/components/dashboard/sidebar";
 import { getMessages } from "@/lib/i18n";
+import { isPlatformAdmin } from "@/lib/site-settings";
 import { createClient } from "@/lib/supabase/server";
 import { getMembership } from "@/lib/supabase/queries";
 
@@ -23,6 +24,8 @@ export default async function DashboardLayout({ children }: { children: React.Re
   const membership = await getMembership();
   if (!membership) redirect("/onboarding");
 
+  const admin = await isPlatformAdmin();
+
   return (
     <QueryProvider>
       <div className="flex min-h-dvh bg-app">
@@ -31,6 +34,7 @@ export default async function DashboardLayout({ children }: { children: React.Re
           support={t.dashboard.support}
           organizationName={membership.organizationName}
           role={membership.role}
+          isPlatformAdmin={admin}
         />
         <div className="flex min-w-0 flex-1 flex-col">{children}</div>
       </div>

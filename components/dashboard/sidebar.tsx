@@ -10,6 +10,7 @@ import {
   LogOut,
   Package,
   Settings,
+  ShieldCheck,
   ShoppingBag,
   Truck,
   Users,
@@ -27,11 +28,14 @@ export function Sidebar({
   support,
   organizationName,
   role,
+  isPlatformAdmin = false,
 }: {
   nav: Messages["dashboard"]["nav"];
   support: Messages["dashboard"]["support"];
   organizationName: string;
   role: string;
+  /** Only the people who run Chalao itself see the admin link. */
+  isPlatformAdmin?: boolean;
 }) {
   const pathname = usePathname();
 
@@ -45,6 +49,7 @@ export function Sidebar({
   ];
 
   const preference: { href: string; label: string; icon: LucideIcon }[] = [
+    ...(isPlatformAdmin ? [{ href: "/admin", label: nav.admin, icon: ShieldCheck }] : []),
     { href: "/settings/organization", label: nav.settings, icon: Settings },
     { href: "/help", label: nav.help, icon: CircleQuestionMark },
   ];
