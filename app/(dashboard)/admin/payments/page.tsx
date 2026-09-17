@@ -4,6 +4,7 @@ import { notFound } from "next/navigation";
 import { CreditCard } from "lucide-react";
 
 import { AdminTabs } from "@/components/admin/admin-shell";
+import { ReviewSubmission } from "@/components/admin/review-submission";
 import { Topbar } from "@/components/dashboard/topbar";
 import { Badge } from "@/components/ui/badge";
 import { listSubmissions } from "@/lib/admin/queries";
@@ -100,6 +101,7 @@ export default async function AdminPaymentsPage({
                   <th className="px-5 py-4 font-medium">{t.admin.payments.columns.sender}</th>
                   <th className="px-5 py-4 font-medium">{t.admin.payments.columns.submitted}</th>
                   <th className="px-5 py-4 font-medium">{t.admin.payments.columns.status}</th>
+                  <th className="px-5 py-4" />
                 </tr>
               </thead>
               <tbody>
@@ -133,6 +135,15 @@ export default async function AdminPaymentsPage({
                       >
                         {t.admin.payments[row.status]}
                       </Badge>
+                    </td>
+                    <td className="px-5 py-4">
+                      {row.status === "pending" ? (
+                        <ReviewSubmission admin={t.admin} submission={row} />
+                      ) : (
+                        row.review_note && (
+                          <span className="text-xs text-text-muted">{row.review_note}</span>
+                        )
+                      )}
                     </td>
                   </tr>
                 ))}

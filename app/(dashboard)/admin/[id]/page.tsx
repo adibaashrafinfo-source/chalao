@@ -4,6 +4,7 @@ import { notFound } from "next/navigation";
 import { ArrowLeft, Lock } from "lucide-react";
 
 import { AdminTabs, StateBadgeTone } from "@/components/admin/admin-shell";
+import { SubscriptionActions, type PlanOption } from "@/components/admin/subscription-actions";
 import { Topbar } from "@/components/dashboard/topbar";
 import { Badge } from "@/components/ui/badge";
 import {
@@ -15,6 +16,7 @@ import { getUserInitials } from "@/lib/dashboard/user";
 import { formatBDT, formatCount } from "@/lib/format";
 import { getMessages } from "@/lib/i18n";
 import { isPlatformAdmin } from "@/lib/site-settings";
+import { createClient } from "@/lib/supabase/server";
 
 const t = getMessages("en");
 
@@ -38,7 +40,18 @@ export default async function AdminOrganizationPage({ params }: { params: Promis
   const organization = await getOrganizationDetail(id);
   if (!organization) notFound();
 
-  const [payments, events] = await Promise.all([listOrganizationPayments(id), listOrganizationEvents(id)]);
+  const supabase = await createClient();
+  const [payments, events, { data: planRows }] = await Promise.all([
+    listOrganizationPayments(id),
+    listOrganizationEvents(id),
+    supabase
+      .from("subscription_plans")
+      .select("code, name, monthly_price")
+      .eq("is_active", true)
+      .order("sort_order"),
+  ]);
+
+  const plans = (planRows ?? []) as PlanOption[];
 
   const states = t.admin.states as Record<string, string>;
   const usage = [
@@ -126,6 +139,15 @@ export default async function AdminOrganizationPage({ params }: { params: Promis
             </div>
           )}
         </section>
+
+        <SubscriptionActions
+          admin={t.admin}
+          organizationId={organization.organization_id}
+          planCode={organization.plan_code}
+          suspended={organization.status === "suspended"}
+          periodEnd={organization.period_end}
+          plans={plans}
+        />
 
         {/* ---- usage ---- */}
         <section className="flex flex-col gap-4 rounded-xl bg-surface p-5 shadow-xs sm:p-6">
