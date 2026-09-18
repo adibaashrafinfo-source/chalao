@@ -6,6 +6,7 @@ import { getSupabaseEnv } from "@/lib/env";
 // (dashboard) layout, which redirects to /onboarding when it is missing.
 const PROTECTED_PREFIXES = [
   "/dashboard",
+  "/inbox",
   "/orders",
   "/customers",
   "/products",

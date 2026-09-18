@@ -9,7 +9,9 @@ import {
   CreditCard,
   LayoutDashboard,
   LogOut,
+  MessagesSquare,
   Package,
+  Plug,
   Settings,
   ShieldCheck,
   ShoppingBag,
@@ -42,6 +44,7 @@ export function Sidebar({
 
   const mainMenu: { href: string; label: string; icon: LucideIcon }[] = [
     { href: "/dashboard", label: nav.dashboard, icon: LayoutDashboard },
+    { href: "/inbox", label: nav.inbox, icon: MessagesSquare },
     { href: "/orders", label: nav.orders, icon: ShoppingBag },
     { href: "/customers", label: nav.customers, icon: Users },
     { href: "/products", label: nav.products, icon: Package },
@@ -51,6 +54,7 @@ export function Sidebar({
 
   const preference: { href: string; label: string; icon: LucideIcon }[] = [
     ...(isPlatformAdmin ? [{ href: "/admin", label: nav.admin, icon: ShieldCheck }] : []),
+    { href: "/settings/channels", label: nav.channels, icon: Plug },
     { href: "/settings/billing", label: nav.billing, icon: CreditCard },
     { href: "/settings/organization", label: nav.settings, icon: Settings },
     { href: "/help", label: nav.help, icon: CircleQuestionMark },
