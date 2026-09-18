@@ -164,6 +164,7 @@ export const en = {
       legal: "Legal",
       privacy: "Privacy Policy",
       terms: "Terms of Service",
+      dataDeletion: "Data Deletion",
       soon: "Soon",
       rights: "© {year} Chalao. All rights reserved.",
     },
@@ -775,6 +776,8 @@ export const en = {
       orders: "Orders",
       lifetime: "Lifetime value",
       openCustomer: "Open customer",
+      createOrder: "Create order",
+      createOrderHint: "Link a customer first, so the order lands on the right person.",
       assignedTo: "Assigned to",
       nobody: "Nobody",
       assignToMe: "Assign to me",
@@ -789,6 +792,25 @@ export const en = {
       empty: "Write something first.",
       sendFailed: "The message was saved but the channel would not take it.",
       generic: "Something went wrong. Try again.",
+    },
+  },
+
+  risk: {
+    title: "Delivery record",
+    levels: {
+      new: "New customer",
+      good: "Good record",
+      watch: "Worth checking",
+      high: "High risk",
+    },
+    delivered: "delivered",
+    returned: "returned",
+    cancelled: "cancelled",
+    noHistory: "No orders yet — nothing to go on.",
+    returnRate: "of settled parcels came back",
+    warning: {
+      title: "This customer has refused parcels before",
+      body: "Confirm by phone, or take the money in advance, before sending this one on cash on delivery.",
     },
   },
 
@@ -998,6 +1020,8 @@ export const en = {
     newSubtitle: "Find the customer by phone, then add products",
     detailSubtitle: "Order details, items and status",
     backToList: "Back to orders",
+    fromConversation: "Open the conversation this came from",
+    forConversation: "Creating an order from a conversation",
     columns: {
       order: "Order #",
       customer: "Customer",

@@ -37,9 +37,12 @@ export function SiteFooter({
       ],
     },
     {
-      // TODO(Ashraf): add hrefs once privacy policy and terms content exist.
       title: footer.legal,
-      links: [{ label: footer.privacy }, { label: footer.terms }],
+      links: [
+        { label: footer.privacy, href: "/privacy" },
+        { label: footer.terms, href: "/terms" },
+        { label: footer.dataDeletion, href: "/data-deletion" },
+      ],
     },
   ];
 

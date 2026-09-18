@@ -112,11 +112,24 @@ export async function createOrderAction(values: unknown): Promise<ActionResult> 
   const subtotal = input.items.reduce((sum, item) => sum + item.unitPrice * item.quantity, 0);
   const total = Math.max(0, subtotal - input.discount + input.deliveryCharge);
 
+  // Only link a conversation this organization actually owns.
+  let conversationId: string | null = null;
+  if (input.conversationId) {
+    const { data: conversation } = await supabase
+      .from("conversations")
+      .select("id")
+      .eq("id", input.conversationId)
+      .eq("organization_id", organizationId)
+      .maybeSingle();
+    conversationId = (conversation?.id as string | undefined) ?? null;
+  }
+
   const { data: order, error: orderError } = await supabase
     .from("orders")
     .insert({
       organization_id: organizationId,
       customer_id: customerId,
+      conversation_id: conversationId,
       source: input.source,
       subtotal,
       discount: input.discount,
@@ -157,6 +170,18 @@ export async function createOrderAction(values: unknown): Promise<ActionResult> 
     // Don't leave an order with no lines behind.
     await supabase.from("orders").delete().eq("id", order.id).eq("organization_id", organizationId);
     return { error: itemsError.message };
+  }
+
+  // Ordering from a conversation is the clearest possible statement of who the
+  // person is, so tie the conversation to the customer if nobody has yet.
+  if (conversationId) {
+    await supabase
+      .from("conversations")
+      .update({ customer_id: customerId })
+      .eq("id", conversationId)
+      .eq("organization_id", organizationId)
+      .is("customer_id", null);
+    revalidatePath("/inbox");
   }
 
   revalidatePath("/orders");

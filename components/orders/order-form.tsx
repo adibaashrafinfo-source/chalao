@@ -35,16 +35,23 @@ const newItem = (): ItemDraft => ({
 export function OrderForm({
   orders,
   variants,
+  presetCustomer = null,
+  conversationId = null,
+  presetSource,
 }: {
   orders: Messages["orders"];
   variants: VariantOption[];
+  /** Filled in when the order started from a conversation in the inbox. */
+  presetCustomer?: CustomerMatch | null;
+  conversationId?: string | null;
+  presetSource?: string;
 }) {
-  const [customer, setCustomer] = useState<CustomerMatch | null>(null);
+  const [customer, setCustomer] = useState<CustomerMatch | null>(presetCustomer);
   const [draft, setDraft] = useState<NewCustomerDraft>({ name: "", phone: "", address: "", district: "" });
   const [items, setItems] = useState<ItemDraft[]>([newItem()]);
   const [discount, setDiscount] = useState("0");
   const [deliveryCharge, setDeliveryCharge] = useState("0");
-  const [source, setSource] = useState<string>("facebook");
+  const [source, setSource] = useState<string>(presetSource ?? "facebook");
   const [deliveryAddress, setDeliveryAddress] = useState("");
   const [district, setDistrict] = useState("");
   const [notes, setNotes] = useState("");
@@ -73,6 +80,7 @@ export function OrderForm({
 
     const result = await createOrderAction({
       customerId: customer?.id ?? null,
+      conversationId,
       newCustomer: customer
         ? null
         : {

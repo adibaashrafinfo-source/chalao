@@ -46,6 +46,8 @@ export const orderCreateSchema = z
   .object({
     customerId: z.string().uuid().nullable().optional(),
     newCustomer: newCustomerSchema.nullable().optional(),
+    // Set when the order started from an inbox conversation, so the two stay linked.
+    conversationId: z.string().uuid().nullable().optional(),
     items: z.array(orderItemSchema).min(1, "Add at least one product"),
     discount: money.default(0),
     deliveryCharge: money.default(0),

@@ -1,10 +1,11 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { ArrowLeft, Lock } from "lucide-react";
+import { ArrowLeft, Lock, MessagesSquare } from "lucide-react";
 
 import { BookShipment, type CourierChoice } from "@/components/couriers/book-shipment";
 import { Topbar } from "@/components/dashboard/topbar";
+import { RiskBadge, RiskWarning } from "@/components/risk/risk-badge";
 import { OrderDetailsForm } from "@/components/orders/order-details-form";
 import { OrderItems, type OrderItemRow } from "@/components/orders/order-items";
 import type { VariantOption } from "@/components/orders/order-form";
@@ -13,6 +14,7 @@ import { Badge } from "@/components/ui/badge";
 import { getUserInitials } from "@/lib/dashboard/user";
 import { formatBDT } from "@/lib/format";
 import { getMessages } from "@/lib/i18n";
+import { getCustomerRisk } from "@/lib/risk/queries";
 import {
   areItemsEditable,
   isOrderEditable,
@@ -83,7 +85,7 @@ export default async function OrderDetailPage({ params }: { params: Promise<{ id
   const { data: order } = await supabase
     .from("orders")
     .select(
-      "id, order_number, status, source, subtotal, discount, delivery_charge, total, delivery_address, district, notes, created_at, customers(id, name, phone, address, district)",
+      "id, order_number, status, source, subtotal, discount, delivery_charge, total, delivery_address, district, notes, created_at, conversation_id, customers(id, name, phone, address, district)",
     )
     .eq("id", id)
     .eq("organization_id", organizationId)
@@ -96,6 +98,10 @@ export default async function OrderDetailPage({ params }: { params: Promise<{ id
     | { id: string; name: string; phone: string; address: string | null; district: string | null }[]
     | null;
   const customer = Array.isArray(customerData) ? customerData[0] : customerData;
+
+  // How this customer's past parcels ended — the thing worth knowing before a
+  // cash-on-delivery order is sent out.
+  const risk = customer ? await getCustomerRisk(customer.id) : null;
 
   const [{ data: itemRows }, { data: historyRows }] = await Promise.all([
     supabase
@@ -221,6 +227,7 @@ export default async function OrderDetailPage({ params }: { params: Promise<{ id
                 <span className="text-sm tabular-nums text-text-secondary">
                   {customer?.phone ? formatPhone(customer.phone) : "—"}
                 </span>
+                <RiskBadge risk={risk} messages={t.risk} />
               </div>
               <div className="flex max-w-sm flex-col gap-1 text-sm text-text-secondary sm:text-right">
                 <span>{(order.delivery_address as string | null) ?? customer?.address ?? "—"}</span>
@@ -230,6 +237,16 @@ export default async function OrderDetailPage({ params }: { params: Promise<{ id
             <p className="text-xs text-text-muted">
               {dateTimeFormatter.format(new Date(order.created_at as string))}
             </p>
+
+            {order.conversation_id ? (
+              <Link
+                href={`/inbox?c=${order.conversation_id as string}`}
+                className="flex w-fit items-center gap-1.5 text-xs text-text-secondary hover:text-brand-dark"
+              >
+                <MessagesSquare className="size-3.5" aria-hidden="true" />
+                {t.orders.fromConversation}
+              </Link>
+            ) : null}
           </section>
 
           <OrderItems
@@ -359,6 +376,9 @@ export default async function OrderDetailPage({ params }: { params: Promise<{ id
               </div>
             </section>
           )}
+
+          {/* Said before the buttons, not after: this is the moment the seller decides. */}
+          {status === "new" ? <RiskWarning risk={risk} messages={t.risk} /> : null}
 
           <StatusActions orders={t.orders} orderId={order.id as string} status={status} />
 

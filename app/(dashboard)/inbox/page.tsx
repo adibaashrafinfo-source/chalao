@@ -11,6 +11,7 @@ import { MessageThread, type ThreadMessage } from "@/components/inbox/message-th
 import { Button } from "@/components/ui/button";
 import { getUserInitials } from "@/lib/dashboard/user";
 import { getMessages } from "@/lib/i18n";
+import { getCustomerRisk } from "@/lib/risk/queries";
 import { createClient } from "@/lib/supabase/server";
 import { getMembership } from "@/lib/supabase/queries";
 import { getCurrentUser } from "@/lib/supabase/user";
@@ -133,6 +134,10 @@ export default async function InboxPage({
     }
   }
 
+  // The customer's delivery record, so a reply can be written knowing whether
+  // their past parcels came back.
+  const risk = customer ? await getCustomerRisk(customer.id) : null;
+
   // Names for whoever a conversation is assigned to.
   const assigneeIds = Array.from(
     new Set([...conversations, ...(selected ? [selected] : [])].map((row) => row.assigned_to).filter(Boolean)),
@@ -231,6 +236,8 @@ export default async function InboxPage({
             {selected ? (
               <ContextPanel
                 inbox={t.inbox}
+                riskMessages={t.risk}
+                risk={risk}
                 conversationId={selected.id}
                 status={selected.status}
                 channelLabel={connectionLabels.get(selected.channel_connection_id) ?? ""}

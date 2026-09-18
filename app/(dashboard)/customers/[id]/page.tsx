@@ -5,12 +5,14 @@ import { ArrowLeft } from "lucide-react";
 
 import { CustomerForm } from "@/components/customers/customer-form";
 import { DeleteCustomerButton } from "@/components/customers/delete-customer-button";
+import { RiskBadge } from "@/components/risk/risk-badge";
 import { Topbar } from "@/components/dashboard/topbar";
 import { Badge } from "@/components/ui/badge";
 import { getUserInitials } from "@/lib/dashboard/user";
 import { formatBDT, formatCount } from "@/lib/format";
 import { getMessages } from "@/lib/i18n";
 import { orderSourceLabel, orderStatusLabel, orderStatusTone } from "@/lib/orders/status";
+import { getCustomerRisk } from "@/lib/risk/queries";
 import { createClient } from "@/lib/supabase/server";
 import { getMembership } from "@/lib/supabase/queries";
 
@@ -60,6 +62,8 @@ export default async function CustomerProfilePage({ params }: { params: Promise<
     .filter((order) => order.status === "delivered")
     .reduce((sum, order) => sum + Number(order.total), 0);
 
+  const risk = await getCustomerRisk(customer.id as string);
+
   const stats = [
     { label: t.customers.stats.totalOrders, value: formatCount(orders.length) },
     { label: t.customers.stats.delivered, value: formatCount(countBy("delivered")) },
@@ -88,6 +92,8 @@ export default async function CustomerProfilePage({ params }: { params: Promise<
             </Link>
             <DeleteCustomerButton customers={t.customers} customerId={customer.id as string} />
           </div>
+
+          <RiskBadge risk={risk} messages={t.risk} />
 
           <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-5">
             <div className="flex flex-col gap-1.5 rounded-xl bg-brand-lime p-5 shadow-xs">

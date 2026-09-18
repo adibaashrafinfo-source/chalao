@@ -1,7 +1,8 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { ArrowLeft, Package } from "lucide-react";
+import { ArrowLeft, MessagesSquare, Package } from "lucide-react";
 
+import type { CustomerMatch } from "@/app/(dashboard)/customers/actions";
 import { LimitNotice } from "@/components/billing/limit-notice";
 import { Topbar } from "@/components/dashboard/topbar";
 import { OrderForm, type VariantOption } from "@/components/orders/order-form";
@@ -25,7 +26,12 @@ type VariantRow = {
   products: { name: string; is_active: boolean } | { name: string; is_active: boolean }[] | null;
 };
 
-export default async function NewOrderPage() {
+export default async function NewOrderPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ conversation?: string }>;
+}) {
+  const { conversation: conversationParam } = await searchParams;
   const membership = await getMembership();
   const supabase = await createClient();
   const initials = await getUserInitials();
@@ -57,6 +63,36 @@ export default async function NewOrderPage() {
         stock: Number(variant.stock),
       };
     });
+
+  // Coming from the inbox: the conversation decides the customer and the source,
+  // so the seller doesn't retype what the software already knows.
+  let presetCustomer: CustomerMatch | null = null;
+  let conversationId: string | null = null;
+  let presetSource: string | undefined;
+
+  if (conversationParam) {
+    const { data: conversation } = await supabase
+      .from("conversations")
+      .select("id, customer_id, channel_connections(provider), customers(id, name, phone, address, district)")
+      .eq("id", conversationParam)
+      .eq("organization_id", membership?.organizationId ?? "")
+      .maybeSingle();
+
+    if (conversation) {
+      conversationId = conversation.id as string;
+
+      const joinedCustomer = conversation.customers as CustomerMatch | CustomerMatch[] | null;
+      presetCustomer = (Array.isArray(joinedCustomer) ? joinedCustomer[0] : joinedCustomer) ?? null;
+
+      const joinedChannel = conversation.channel_connections as
+        | { provider: string }
+        | { provider: string }[]
+        | null;
+      const provider = (Array.isArray(joinedChannel) ? joinedChannel[0] : joinedChannel)?.provider;
+      // A sandbox conversation isn't a real Facebook order, so it stays "manual".
+      if (provider === "facebook" || provider === "instagram") presetSource = provider;
+    }
+  }
 
   return (
     <>
@@ -94,7 +130,22 @@ export default async function NewOrderPage() {
           ) : (
             <>
               <LimitNotice limits={t.limits} gate={gate} />
-              <OrderForm orders={t.orders} variants={variants} />
+              {conversationId ? (
+                <Link
+                  href={`/inbox?c=${conversationId}`}
+                  className="flex w-fit items-center gap-1.5 rounded-lg bg-surface-alt px-3 py-2 text-xs text-text-secondary hover:text-brand-dark"
+                >
+                  <MessagesSquare className="size-3.5" aria-hidden="true" />
+                  {t.orders.forConversation}
+                </Link>
+              ) : null}
+              <OrderForm
+                orders={t.orders}
+                variants={variants}
+                presetCustomer={presetCustomer}
+                conversationId={conversationId}
+                presetSource={presetSource}
+              />
             </>
           )}
         </div>

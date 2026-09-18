@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useState, useTransition } from "react";
-import { Loader2, Search, UserRound } from "lucide-react";
+import { Loader2, Search, ShoppingBag, UserRound } from "lucide-react";
 
 import { findCustomersByPhoneAction, type CustomerMatch } from "@/app/(dashboard)/customers/actions";
 import {
@@ -11,10 +11,12 @@ import {
   linkCustomerAction,
   setConversationStatusAction,
 } from "@/app/(dashboard)/inbox/actions";
+import { RiskBadge } from "@/components/risk/risk-badge";
 import { Button } from "@/components/ui/button";
 import { formatBDT } from "@/lib/format";
 import type { Messages } from "@/lib/i18n";
 import { formatPhone } from "@/lib/phone";
+import type { CustomerRisk } from "@/lib/risk/types";
 
 type LinkedCustomer = {
   id: string;
@@ -29,22 +31,26 @@ const dayFormatter = new Intl.DateTimeFormat("en-GB", { day: "2-digit", month: "
 
 export function ContextPanel({
   inbox,
+  riskMessages,
   conversationId,
   status,
   channelLabel,
   contactName,
   startedAt,
   customer,
+  risk,
   assignedToName,
   assignedToMe,
 }: {
   inbox: Messages["inbox"];
+  riskMessages: Messages["risk"];
   conversationId: string;
   status: "open" | "pending" | "snoozed" | "closed";
   channelLabel: string;
   contactName: string;
   startedAt: string;
   customer: LinkedCustomer | null;
+  risk: CustomerRisk | null;
   assignedToName: string | null;
   assignedToMe: boolean;
 }) {
@@ -114,6 +120,8 @@ export function ContextPanel({
             <p className="text-xs text-text-secondary">{formatPhone(customer.phone)}</p>
             {customer.district ? <p className="text-xs text-text-muted">{customer.district}</p> : null}
 
+            <RiskBadge risk={risk} messages={riskMessages} showCounts={false} />
+
             <dl className="flex gap-4 pt-1">
               <div className="flex flex-col">
                 <dt className="text-[11px] text-text-muted">{inbox.context.orders}</dt>
@@ -128,6 +136,12 @@ export function ContextPanel({
             </dl>
 
             <div className="flex flex-wrap gap-2 pt-1">
+              <Button asChild size="sm">
+                <Link href={`/orders/new?conversation=${conversationId}`}>
+                  <ShoppingBag className="size-4" aria-hidden="true" />
+                  {inbox.context.createOrder}
+                </Link>
+              </Button>
               <Button asChild variant="outline" size="sm">
                 <Link href={`/customers/${customer.id}`}>{inbox.context.openCustomer}</Link>
               </Button>
