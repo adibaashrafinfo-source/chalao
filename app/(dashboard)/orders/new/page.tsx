@@ -89,8 +89,9 @@ export default async function NewOrderPage({
         | { provider: string }[]
         | null;
       const provider = (Array.isArray(joinedChannel) ? joinedChannel[0] : joinedChannel)?.provider;
-      // A sandbox conversation isn't a real Facebook order, so it stays "manual".
-      if (provider === "facebook" || provider === "instagram") presetSource = provider;
+      // A sandbox conversation is not a real Facebook order, so it is recorded as
+      // manual rather than inventing a channel the order never came through.
+      presetSource = provider === "facebook" || provider === "instagram" ? provider : "manual";
     }
   }
 
