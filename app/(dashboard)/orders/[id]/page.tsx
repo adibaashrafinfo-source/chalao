@@ -5,7 +5,8 @@ import { ArrowLeft, Lock, MessagesSquare } from "lucide-react";
 
 import { BookShipment, type CourierChoice } from "@/components/couriers/book-shipment";
 import { Topbar } from "@/components/dashboard/topbar";
-import { RiskBadge, RiskWarning } from "@/components/risk/risk-badge";
+import { RiskBadge } from "@/components/risk/risk-badge";
+import { ConfirmationPanel } from "@/components/orders/confirmation-panel";
 import { OrderDetailsForm } from "@/components/orders/order-details-form";
 import { OrderItems, type OrderItemRow } from "@/components/orders/order-items";
 import type { VariantOption } from "@/components/orders/order-form";
@@ -14,6 +15,7 @@ import { Badge } from "@/components/ui/badge";
 import { getUserInitials } from "@/lib/dashboard/user";
 import { formatBDT } from "@/lib/format";
 import { getMessages } from "@/lib/i18n";
+import { getConfirmationDecision } from "@/lib/orders/confirmation";
 import { getCustomerRisk } from "@/lib/risk/queries";
 import {
   areItemsEditable,
@@ -99,9 +101,12 @@ export default async function OrderDetailPage({ params }: { params: Promise<{ id
     | null;
   const customer = Array.isArray(customerData) ? customerData[0] : customerData;
 
-  // How this customer's past parcels ended — the thing worth knowing before a
-  // cash-on-delivery order is sent out.
-  const risk = customer ? await getCustomerRisk(customer.id) : null;
+  // How this customer's past parcels ended, and what the seller's own rules say
+  // to do about it — both worth knowing before a parcel goes out on COD.
+  const [risk, decision] = await Promise.all([
+    customer ? getCustomerRisk(customer.id) : Promise.resolve(null),
+    getConfirmationDecision(id),
+  ]);
 
   const [{ data: itemRows }, { data: historyRows }] = await Promise.all([
     supabase
@@ -378,7 +383,7 @@ export default async function OrderDetailPage({ params }: { params: Promise<{ id
           )}
 
           {/* Said before the buttons, not after: this is the moment the seller decides. */}
-          {status === "new" ? <RiskWarning risk={risk} messages={t.risk} /> : null}
+          <ConfirmationPanel copy={t.confirmation} riskCopy={t.risk} decision={decision} />
 
           <StatusActions orders={t.orders} orderId={order.id as string} status={status} />
 

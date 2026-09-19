@@ -172,6 +172,11 @@ export async function createOrderAction(values: unknown): Promise<ActionResult> 
     return { error: itemsError.message };
   }
 
+  // The seller's own rules decide whether this one can be confirmed without them.
+  // It returns false rather than throwing when it cannot — a stock shortage must
+  // not cost the seller the order they just took.
+  await supabase.rpc("auto_confirm_order", { p_order_id: order.id });
+
   // Ordering from a conversation is the clearest possible statement of who the
   // person is, so tie the conversation to the customer if nobody has yet.
   if (conversationId) {

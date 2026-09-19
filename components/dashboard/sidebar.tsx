@@ -15,6 +15,7 @@ import {
   Settings,
   ShieldCheck,
   ShoppingBag,
+  SlidersHorizontal,
   Truck,
   Users,
   type LucideIcon,
@@ -55,6 +56,7 @@ export function Sidebar({
   const preference: { href: string; label: string; icon: LucideIcon }[] = [
     ...(isPlatformAdmin ? [{ href: "/admin", label: nav.admin, icon: ShieldCheck }] : []),
     { href: "/settings/channels", label: nav.channels, icon: Plug },
+    { href: "/settings/orders", label: nav.orderRules, icon: SlidersHorizontal },
     { href: "/settings/billing", label: nav.billing, icon: CreditCard },
     { href: "/settings/organization", label: nav.settings, icon: Settings },
     { href: "/help", label: nav.help, icon: CircleQuestionMark },
