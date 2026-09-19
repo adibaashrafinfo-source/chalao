@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
+  Banknote,
   Boxes,
   ChevronDown,
   CircleQuestionMark,
@@ -51,6 +52,7 @@ export function Sidebar({
     { href: "/products", label: nav.products, icon: Package },
     { href: "/inventory", label: nav.inventory, icon: Boxes },
     { href: "/couriers", label: nav.couriers, icon: Truck },
+    { href: "/cod", label: nav.cod, icon: Banknote },
   ];
 
   const preference: { href: string; label: string; icon: LucideIcon }[] = [
