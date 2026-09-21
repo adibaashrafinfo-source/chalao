@@ -39,7 +39,8 @@ export function SignupForm({
   });
 
   return (
-    <form onSubmit={onSubmit} noValidate className="flex flex-col gap-5">
+    // method="post" so a submit before JavaScript loads never puts the password in the URL.
+    <form onSubmit={onSubmit} method="post" noValidate className="flex flex-col gap-5">
       <FormField
         label={auth.fields.fullName}
         autoComplete="name"

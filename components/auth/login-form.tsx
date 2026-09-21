@@ -38,7 +38,10 @@ export function LoginForm({
   });
 
   return (
-    <form onSubmit={onSubmit} noValidate className="flex flex-col gap-5">
+    // method="post": if someone submits before the page's JavaScript has loaded,
+    // the browser falls back to a plain form submit. Without this it would be a
+    // GET, putting the password in the URL, the history and the server logs.
+    <form onSubmit={onSubmit} method="post" noValidate className="flex flex-col gap-5">
       <FormField
         label={auth.fields.email}
         type="email"
