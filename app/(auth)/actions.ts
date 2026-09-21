@@ -10,7 +10,13 @@ export type AuthResult = { error?: string; notice?: string };
 
 const t = getMessages("en");
 
-export async function signInAction(values: unknown): Promise<AuthResult> {
+// Where to go after signing in. Only ever back to an invitation link — never an
+// arbitrary address taken from the URL, which would make this an open redirect.
+function safeNext(next: unknown): string | null {
+  return typeof next === "string" && /^\/invite\/[a-f0-9]{48}$/.test(next) ? next : null;
+}
+
+export async function signInAction(values: unknown, next?: string): Promise<AuthResult> {
   const parsed = makeLoginSchema(t.validation).safeParse(values);
   if (!parsed.success) return { error: parsed.error.issues[0]?.message ?? t.auth.genericError };
 
@@ -22,10 +28,10 @@ export async function signInAction(values: unknown): Promise<AuthResult> {
 
   if (error) return { error: error.message };
 
-  redirect("/dashboard");
+  redirect(safeNext(next) ?? "/dashboard");
 }
 
-export async function signUpAction(values: unknown): Promise<AuthResult> {
+export async function signUpAction(values: unknown, next?: string): Promise<AuthResult> {
   const parsed = makeSignupSchema(t.validation).safeParse(values);
   if (!parsed.success) return { error: parsed.error.issues[0]?.message ?? t.auth.genericError };
 
@@ -46,7 +52,8 @@ export async function signUpAction(values: unknown): Promise<AuthResult> {
   // No session means email confirmation is switched on for this project.
   if (!data.session) return { notice: t.auth.checkEmail };
 
-  redirect("/onboarding");
+  // Someone arriving from an invitation joins that team instead of starting a business.
+  redirect(safeNext(next) ?? "/onboarding");
 }
 
 export async function signOutAction(): Promise<void> {

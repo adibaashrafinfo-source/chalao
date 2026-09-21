@@ -11,7 +11,16 @@ import { Button } from "@/components/ui/button";
 import type { Messages } from "@/lib/i18n";
 import { makeSignupSchema, type SignupValues } from "@/lib/validations/auth";
 
-export function SignupForm({ auth, validation }: { auth: Messages["auth"]; validation: Messages["validation"] }) {
+export function SignupForm({
+  auth,
+  validation,
+  next,
+}: {
+  auth: Messages["auth"];
+  validation: Messages["validation"];
+  /** An invitation link to return to after signing up. */
+  next?: string;
+}) {
   const schema = useMemo(() => makeSignupSchema(validation), [validation]);
   const [result, setResult] = useState<{ error?: string; notice?: string } | null>(null);
   const {
@@ -26,7 +35,7 @@ export function SignupForm({ auth, validation }: { auth: Messages["auth"]; valid
   // On success the server action redirects to /onboarding, so nothing comes back here.
   const onSubmit = handleSubmit(async (values) => {
     setResult(null);
-    setResult((await signUpAction(values)) ?? null);
+    setResult((await signUpAction(values, next)) ?? null);
   });
 
   return (

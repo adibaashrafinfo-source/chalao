@@ -18,6 +18,7 @@ import {
   ShoppingBag,
   SlidersHorizontal,
   Truck,
+  UserPlus,
   Users,
   type LucideIcon,
 } from "lucide-react";
@@ -59,6 +60,7 @@ export function Sidebar({
     ...(isPlatformAdmin ? [{ href: "/admin", label: nav.admin, icon: ShieldCheck }] : []),
     { href: "/settings/channels", label: nav.channels, icon: Plug },
     { href: "/settings/orders", label: nav.orderRules, icon: SlidersHorizontal },
+    { href: "/settings/team", label: nav.team, icon: UserPlus },
     { href: "/settings/billing", label: nav.billing, icon: CreditCard },
     { href: "/settings/organization", label: nav.settings, icon: Settings },
     { href: "/help", label: nav.help, icon: CircleQuestionMark },

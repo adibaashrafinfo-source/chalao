@@ -12,7 +12,16 @@ import type { Messages } from "@/lib/i18n";
 import { cn } from "@/lib/utils";
 import { makeLoginSchema, type LoginValues } from "@/lib/validations/auth";
 
-export function LoginForm({ auth, validation }: { auth: Messages["auth"]; validation: Messages["validation"] }) {
+export function LoginForm({
+  auth,
+  validation,
+  next,
+}: {
+  auth: Messages["auth"];
+  validation: Messages["validation"];
+  /** An invitation link to return to after signing in. */
+  next?: string;
+}) {
   const schema = useMemo(() => makeLoginSchema(validation), [validation]);
   const [formError, setFormError] = useState<string | null>(null);
   const {
@@ -24,7 +33,7 @@ export function LoginForm({ auth, validation }: { auth: Messages["auth"]; valida
   // On success the server action redirects, so nothing comes back here.
   const onSubmit = handleSubmit(async (values) => {
     setFormError(null);
-    const result = await signInAction(values);
+    const result = await signInAction(values, next);
     if (result?.error) setFormError(result.error);
   });
 
