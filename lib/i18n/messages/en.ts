@@ -804,7 +804,7 @@ export const en = {
     subtitle: "What came back, what it cost, and what can be sold again",
     stats: {
       count: "Returned this month",
-      countHint: "{delivered} parcels delivered in the same time",
+      countHint: "Against {delivered} delivered in the same time",
       charges: "Courier charges on returns",
       chargesHint: "Paid for parcels that sold nothing",
       value: "Order value lost",
