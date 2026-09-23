@@ -6,6 +6,7 @@ import { redirect } from "next/navigation";
 
 import { findChannelAdapter } from "@/lib/channels/registry";
 import { getMessages } from "@/lib/i18n";
+import { requirePermission } from "@/lib/permissions-server";
 import { createClient } from "@/lib/supabase/server";
 import { getMembership } from "@/lib/supabase/queries";
 
@@ -31,7 +32,9 @@ export async function createChannelAction(values: {
   // A sandbox channel has no page to point at, so it gets its own id.
   const externalId = values.externalId?.trim() || `sandbox-${randomBytes(4).toString("hex")}`;
 
-  const organizationId = await requireOrg();
+  const allowed = await requirePermission("manage_channels");
+  if (allowed.error) return { error: allowed.error };
+  const organizationId = allowed.organizationId;
   const supabase = await createClient();
 
   const { error } = await supabase.from("channel_connections").insert({
@@ -53,7 +56,9 @@ export async function createChannelAction(values: {
 }
 
 export async function setChannelActiveAction(connectionId: string, isActive: boolean): Promise<ActionResult> {
-  const organizationId = await requireOrg();
+  const allowed = await requirePermission("manage_channels");
+  if (allowed.error) return { error: allowed.error };
+  const organizationId = allowed.organizationId;
   const supabase = await createClient();
 
   const { error } = await supabase
@@ -74,7 +79,9 @@ export async function setChannelActiveAction(connectionId: string, isActive: boo
  * while there are none. Otherwise the seller is told to disconnect instead.
  */
 export async function deleteChannelAction(connectionId: string): Promise<ActionResult> {
-  const organizationId = await requireOrg();
+  const allowed = await requirePermission("manage_channels");
+  if (allowed.error) return { error: allowed.error };
+  const organizationId = allowed.organizationId;
   const supabase = await createClient();
 
   const { count } = await supabase

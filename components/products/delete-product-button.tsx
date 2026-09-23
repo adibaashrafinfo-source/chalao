@@ -12,10 +12,15 @@ import type { Messages } from "@/lib/i18n";
 export function DeleteProductButton({
   products,
   productId,
+  canDelete,
 }: {
   products: Messages["products"];
   productId: string;
+  /** Staff keep the product; only a manager or the owner removes one. */
+  canDelete: boolean;
 }) {
+  if (!canDelete) return null;
+
   const [error, setError] = useState<string | null>(null);
   const [pending, setPending] = useState(false);
 

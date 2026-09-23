@@ -9,6 +9,7 @@ import { ProductForm } from "@/components/products/product-form";
 import { VariantsEditor, type VariantRow } from "@/components/products/variants-editor";
 import { getUserInitials } from "@/lib/dashboard/user";
 import { getMessages } from "@/lib/i18n";
+import { can } from "@/lib/permissions";
 import { createClient } from "@/lib/supabase/server";
 import { getMembership } from "@/lib/supabase/queries";
 
@@ -59,7 +60,7 @@ export default async function ProductDetailPage({ params }: { params: Promise<{ 
               <ArrowLeft className="size-4" aria-hidden="true" />
               {t.products.backToList}
             </Link>
-            <DeleteProductButton products={t.products} productId={product.id as string} />
+            <DeleteProductButton canDelete={can(membership?.role, "delete_records")} products={t.products} productId={product.id as string} />
           </div>
 
           <ProductForm

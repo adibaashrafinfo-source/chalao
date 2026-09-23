@@ -14,7 +14,16 @@ import type { Messages } from "@/lib/i18n";
 
 const dateFormatter = new Intl.DateTimeFormat("en-GB", { day: "2-digit", month: "short", year: "numeric" });
 
-export function PayoutCard({ copy, payout }: { copy: Messages["cod"]; payout: Payout }) {
+export function PayoutCard({
+  copy,
+  payout,
+  canManage,
+}: {
+  copy: Messages["cod"];
+  payout: Payout;
+  /** Removing a payout is the owner's call, like recording one. */
+  canManage: boolean;
+}) {
   const router = useRouter();
   const [open, setOpen] = useState(false);
   const [pending, setPending] = useState(false);
@@ -51,6 +60,7 @@ export function PayoutCard({ copy, payout }: { copy: Messages["cod"]; payout: Pa
           </p>
         </div>
 
+        {canManage ? (
         <Dialog>
           <DialogTrigger asChild>
             <Button variant="ghost" size="sm" className="text-danger hover:bg-danger-tint">
@@ -63,6 +73,7 @@ export function PayoutCard({ copy, payout }: { copy: Messages["cod"]; payout: Pa
             </Button>
           </DialogContent>
         </Dialog>
+        ) : null}
       </div>
 
       {error ? <FormNotice tone="error">{error}</FormNotice> : null}

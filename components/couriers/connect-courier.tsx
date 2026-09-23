@@ -16,9 +16,12 @@ import type { Messages } from "@/lib/i18n";
 export function ConnectCourier({
   couriers,
   providers,
+  canManage,
 }: {
   couriers: Messages["couriers"];
   providers: { provider: string; label: string; credentialFields: CredentialField[] }[];
+  /** Staff work with the couriers that are connected, but do not change them. */
+  canManage: boolean;
 }) {
   const router = useRouter();
   const [open, setOpen] = useState(false);
@@ -47,6 +50,8 @@ export function ConnectCourier({
     setCredentials({});
     router.refresh();
   };
+
+  if (!canManage) return null;
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>

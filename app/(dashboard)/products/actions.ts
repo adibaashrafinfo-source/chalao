@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 
 import { getMessages } from "@/lib/i18n";
+import { requirePermission } from "@/lib/permissions-server";
 import { createClient } from "@/lib/supabase/server";
 import { getMembership } from "@/lib/supabase/queries";
 import { productSchema, stockAdjustmentSchema, variantSchema } from "@/lib/validations/product";
@@ -96,7 +97,9 @@ export async function toggleProductActiveAction(productId: string, isActive: boo
 }
 
 export async function deleteProductAction(productId: string): Promise<ActionResult> {
-  const organizationId = await requireOrg();
+  const allowed = await requirePermission("delete_records");
+  if (allowed.error) return { error: allowed.error };
+  const organizationId = allowed.organizationId;
   const supabase = await createClient();
 
   const { error } = await supabase
@@ -173,6 +176,20 @@ export async function updateVariantAction(
   const organizationId = await requireOrg();
   const supabase = await createClient();
 
+  // Everything else about a variant is staff work; the selling price is not. Only
+  // ask about the permission when the price is actually being changed.
+  const { data: current } = await supabase
+    .from("product_variants")
+    .select("selling_price")
+    .eq("id", variantId)
+    .eq("organization_id", organizationId)
+    .maybeSingle();
+
+  if (current && Number(current.selling_price) !== parsed.data.sellingPrice) {
+    const allowed = await requirePermission("change_price");
+    if (allowed.error) return { error: allowed.error };
+  }
+
   // Stock is deliberately not updatable here — only apply_inventory_movement() may change it.
   const { error } = await supabase
     .from("product_variants")
@@ -193,7 +210,9 @@ export async function updateVariantAction(
 }
 
 export async function deleteVariantAction(productId: string, variantId: string): Promise<ActionResult> {
-  const organizationId = await requireOrg();
+  const allowed = await requirePermission("delete_records");
+  if (allowed.error) return { error: allowed.error };
+  const organizationId = allowed.organizationId;
   const supabase = await createClient();
 
   const { error } = await supabase

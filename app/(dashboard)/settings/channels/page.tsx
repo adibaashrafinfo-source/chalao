@@ -7,6 +7,7 @@ import { Topbar } from "@/components/dashboard/topbar";
 import { listChannelAdapters } from "@/lib/channels/registry";
 import { getUserInitials } from "@/lib/dashboard/user";
 import { getMessages } from "@/lib/i18n";
+import { can } from "@/lib/permissions";
 import { createClient } from "@/lib/supabase/server";
 import { getMembership } from "@/lib/supabase/queries";
 
@@ -57,7 +58,7 @@ export default async function ChannelsPage() {
 
       <main className="flex flex-1 flex-col gap-4 p-4 sm:p-6">
         <div className="flex justify-end">
-          <ConnectChannel channels={t.channels} providers={providers} />
+          <ConnectChannel canManage={can(membership?.role, "manage_channels")} channels={t.channels} providers={providers} />
         </div>
 
         {error ? (

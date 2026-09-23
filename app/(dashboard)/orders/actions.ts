@@ -5,6 +5,7 @@ import { redirect } from "next/navigation";
 
 import { getMessages } from "@/lib/i18n";
 import { gateReasonFromError } from "@/lib/subscription";
+import { requirePermission } from "@/lib/permissions-server";
 import { createClient } from "@/lib/supabase/server";
 import { getMembership } from "@/lib/supabase/queries";
 import { orderCreateSchema, orderDetailsSchema, orderItemSchema } from "@/lib/validations/order";
@@ -321,6 +322,14 @@ export async function transitionOrderStatusAction(
   note?: string,
 ): Promise<ActionResult> {
   await requireOrg();
+
+  // Cancelling is the one move staff cannot make: stock comes back and the sale
+  // is lost. Every other transition is their day-to-day work.
+  if (newStatus === "cancelled") {
+    const allowed = await requirePermission("cancel_order");
+    if (allowed.error) return { error: allowed.error };
+  }
+
   const supabase = await createClient();
 
   // The database validates the move, writes order_status_history and moves stock.

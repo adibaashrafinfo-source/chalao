@@ -25,10 +25,13 @@ export function RecordPayout({
   copy,
   shipments,
   couriers,
+  canManage,
 }: {
   copy: Messages["cod"];
   shipments: UnsettledShipment[];
   couriers: { id: string; label: string; provider: string }[];
+  /** The cash book is the owner's. Others see the figures but record nothing. */
+  canManage: boolean;
 }) {
   const router = useRouter();
   const [open, setOpen] = useState(false);
@@ -115,6 +118,9 @@ export function RecordPayout({
     setNote("");
     router.refresh();
   };
+
+  // A button that always fails is worse than no button.
+  if (!canManage) return null;
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>

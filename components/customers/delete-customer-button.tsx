@@ -12,10 +12,15 @@ import type { Messages } from "@/lib/i18n";
 export function DeleteCustomerButton({
   customers,
   customerId,
+  canDelete,
 }: {
   customers: Messages["customers"];
   customerId: string;
+  /** Staff keep the customer; only a manager or the owner removes one. */
+  canDelete: boolean;
 }) {
+  if (!canDelete) return null;
+
   const [error, setError] = useState<string | null>(null);
   const [pending, setPending] = useState(false);
 

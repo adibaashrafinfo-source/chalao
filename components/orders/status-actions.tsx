@@ -16,16 +16,19 @@ export function StatusActions({
   orders,
   orderId,
   status,
+  canCancel,
 }: {
   orders: Messages["orders"];
   orderId: string;
   status: string;
+  /** Cancelling returns stock and loses the sale, so staff do not see the button. */
+  canCancel: boolean;
 }) {
   const [note, setNote] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [pending, setPending] = useState<string | null>(null);
 
-  const moves = nextStatuses(status);
+  const moves = nextStatuses(status).filter((move) => canCancel || move !== "cancelled");
   // "new" has no button of its own, so the message keys are a loose lookup.
   const actionLabel = orders.statusActions as Record<string, string>;
 

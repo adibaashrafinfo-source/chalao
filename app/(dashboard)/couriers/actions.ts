@@ -9,6 +9,7 @@ import { CourierError } from "@/lib/couriers/types";
 import { getMessages } from "@/lib/i18n";
 import { normalizeBdPhone } from "@/lib/phone";
 import { createAdminClient, hasServiceRoleKey } from "@/lib/supabase/admin";
+import { requirePermission } from "@/lib/permissions-server";
 import { createClient } from "@/lib/supabase/server";
 import { getMembership } from "@/lib/supabase/queries";
 
@@ -57,7 +58,9 @@ export async function connectCourierAction(values: unknown): Promise<ActionResul
   const parsed = connectSchema.safeParse(values);
   if (!parsed.success) return { error: parsed.error.issues[0]?.message ?? t.couriers.errors.invalid };
 
-  const organizationId = await requireOrg();
+  const allowed = await requirePermission("manage_couriers");
+  if (allowed.error) return { error: allowed.error };
+  const organizationId = allowed.organizationId;
   const supabase = await createClient();
   const adapter = getCourierAdapter(parsed.data.provider);
 
@@ -130,7 +133,9 @@ export async function testCourierAction(courierAccountId: string): Promise<Actio
 }
 
 export async function setCourierActiveAction(courierAccountId: string, isActive: boolean): Promise<ActionResult> {
-  const organizationId = await requireOrg();
+  const allowed = await requirePermission("manage_couriers");
+  if (allowed.error) return { error: allowed.error };
+  const organizationId = allowed.organizationId;
   const supabase = await createClient();
 
   const { error } = await supabase
@@ -146,7 +151,9 @@ export async function setCourierActiveAction(courierAccountId: string, isActive:
 }
 
 export async function deleteCourierAction(courierAccountId: string): Promise<ActionResult> {
-  const organizationId = await requireOrg();
+  const allowed = await requirePermission("manage_couriers");
+  if (allowed.error) return { error: allowed.error };
+  const organizationId = allowed.organizationId;
   const supabase = await createClient();
 
   const { error } = await supabase

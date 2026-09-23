@@ -11,6 +11,7 @@ import { Badge } from "@/components/ui/badge";
 import { getUserInitials } from "@/lib/dashboard/user";
 import { formatBDT, formatCount } from "@/lib/format";
 import { getMessages } from "@/lib/i18n";
+import { can } from "@/lib/permissions";
 import { orderSourceLabel, orderStatusLabel, orderStatusTone } from "@/lib/orders/status";
 import { getCustomerRisk } from "@/lib/risk/queries";
 import { createClient } from "@/lib/supabase/server";
@@ -90,7 +91,7 @@ export default async function CustomerProfilePage({ params }: { params: Promise<
               <ArrowLeft className="size-4" aria-hidden="true" />
               {t.customers.backToList}
             </Link>
-            <DeleteCustomerButton customers={t.customers} customerId={customer.id as string} />
+            <DeleteCustomerButton canDelete={can(membership?.role, "delete_records")} customers={t.customers} customerId={customer.id as string} />
           </div>
 
           <RiskBadge risk={risk} messages={t.risk} />

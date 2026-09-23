@@ -5,6 +5,7 @@ import { redirect } from "next/navigation";
 import { z } from "zod";
 
 import { getMessages } from "@/lib/i18n";
+import { requirePermission } from "@/lib/permissions-server";
 import { createClient } from "@/lib/supabase/server";
 import { getMembership } from "@/lib/supabase/queries";
 
@@ -44,7 +45,10 @@ export async function recordPayoutAction(values: unknown): Promise<ActionResult>
   const parsed = payoutSchema.safeParse(values);
   if (!parsed.success) return { error: parsed.error.issues[0]?.message ?? t.cod.errors.invalid };
 
-  await requireOrg();
+  // Recording a payout is saying "this money arrived" — the cash book, so the owner's alone.
+  const allowed = await requirePermission("manage_cod");
+  if (allowed.error) return { error: allowed.error };
+
   const supabase = await createClient();
   const input = parsed.data;
 
@@ -77,7 +81,9 @@ export async function recordPayoutAction(values: unknown): Promise<ActionResult>
  * these are typed in by hand, and a mistyped one has to be undoable.
  */
 export async function deletePayoutAction(payoutId: string): Promise<ActionResult> {
-  const organizationId = await requireOrg();
+  const allowed = await requirePermission("manage_cod");
+  if (allowed.error) return { error: allowed.error };
+  const organizationId = allowed.organizationId;
   const supabase = await createClient();
 
   const { error } = await supabase

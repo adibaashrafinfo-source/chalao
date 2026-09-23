@@ -10,6 +10,7 @@ import { getCodSummary, listPayouts, listUnsettledShipments } from "@/lib/cod/qu
 import { getUserInitials } from "@/lib/dashboard/user";
 import { formatBDT, formatCount } from "@/lib/format";
 import { getMessages } from "@/lib/i18n";
+import { can } from "@/lib/permissions";
 import { createClient } from "@/lib/supabase/server";
 import { getMembership } from "@/lib/supabase/queries";
 
@@ -95,7 +96,7 @@ export default async function CodPage() {
         <section className="flex flex-col gap-4 rounded-xl bg-surface p-5 shadow-xs sm:p-6">
           <div className="flex flex-wrap items-center justify-between gap-3">
             <h2 className="font-display text-base font-semibold text-brand-dark">{t.cod.unsettled.title}</h2>
-            <RecordPayout copy={t.cod} shipments={unsettled} couriers={couriers} />
+            <RecordPayout canManage={can(membership.role, "manage_cod")} copy={t.cod} shipments={unsettled} couriers={couriers} />
           </div>
 
           {unsettled.length === 0 ? (
@@ -161,7 +162,7 @@ export default async function CodPage() {
               <p className="max-w-sm text-sm leading-relaxed text-text-secondary">{t.cod.payouts.empty}</p>
             </div>
           ) : (
-            payouts.map((payout) => <PayoutCard key={payout.id} copy={t.cod} payout={payout} />)
+            payouts.map((payout) => <PayoutCard key={payout.id} canManage={can(membership.role, "manage_cod")} copy={t.cod} payout={payout} />)
           )}
         </section>
       </main>

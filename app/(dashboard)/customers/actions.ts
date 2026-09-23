@@ -5,6 +5,7 @@ import { redirect } from "next/navigation";
 
 import { getMessages } from "@/lib/i18n";
 import { normalizeBdPhone } from "@/lib/phone";
+import { requirePermission } from "@/lib/permissions-server";
 import { createClient } from "@/lib/supabase/server";
 import { getMembership } from "@/lib/supabase/queries";
 import { customerSchema } from "@/lib/validations/customer";
@@ -72,7 +73,9 @@ export async function updateCustomerAction(customerId: string, values: unknown):
 }
 
 export async function deleteCustomerAction(customerId: string): Promise<ActionResult> {
-  const organizationId = await requireOrg();
+  const allowed = await requirePermission("delete_records");
+  if (allowed.error) return { error: allowed.error };
+  const organizationId = allowed.organizationId;
   const supabase = await createClient();
 
   const { error } = await supabase

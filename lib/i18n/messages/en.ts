@@ -798,6 +798,11 @@ export const en = {
     },
   },
 
+  roles: {
+    managerOnly: "Only a manager or the owner can do this.",
+    ownerOnly: "Only the owner can do this.",
+  },
+
   team: {
     title: "Team",
     subtitle: "Who works in this business, and what they can do",

@@ -15,6 +15,7 @@ import { Badge } from "@/components/ui/badge";
 import { getUserInitials } from "@/lib/dashboard/user";
 import { formatBDT } from "@/lib/format";
 import { getMessages } from "@/lib/i18n";
+import { can } from "@/lib/permissions";
 import { getConfirmationDecision } from "@/lib/orders/confirmation";
 import { getCustomerRisk } from "@/lib/risk/queries";
 import {
@@ -385,7 +386,7 @@ export default async function OrderDetailPage({ params }: { params: Promise<{ id
           {/* Said before the buttons, not after: this is the moment the seller decides. */}
           <ConfirmationPanel copy={t.confirmation} riskCopy={t.risk} decision={decision} />
 
-          <StatusActions orders={t.orders} orderId={order.id as string} status={status} />
+          <StatusActions canCancel={can(membership?.role, "cancel_order")} orders={t.orders} orderId={order.id as string} status={status} />
 
           {history.length > 0 && (
             <section className="flex flex-col gap-4 rounded-xl bg-surface p-5 shadow-xs sm:p-6">
