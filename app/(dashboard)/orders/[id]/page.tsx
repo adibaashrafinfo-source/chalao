@@ -7,6 +7,7 @@ import { BookShipment, type CourierChoice } from "@/components/couriers/book-shi
 import { Topbar } from "@/components/dashboard/topbar";
 import { RiskBadge } from "@/components/risk/risk-badge";
 import { ConfirmationPanel } from "@/components/orders/confirmation-panel";
+import { RecordReturn } from "@/components/returns/record-return";
 import { OrderDetailsForm } from "@/components/orders/order-details-form";
 import { OrderItems, type OrderItemRow } from "@/components/orders/order-items";
 import type { VariantOption } from "@/components/orders/order-form";
@@ -18,6 +19,7 @@ import { getMessages } from "@/lib/i18n";
 import { can } from "@/lib/permissions";
 import { getConfirmationDecision } from "@/lib/orders/confirmation";
 import { getCustomerRisk } from "@/lib/risk/queries";
+import { hasReturnRecord } from "@/lib/returns/queries";
 import {
   areItemsEditable,
   isOrderEditable,
@@ -104,6 +106,8 @@ export default async function OrderDetailPage({ params }: { params: Promise<{ id
 
   // How this customer's past parcels ended, and what the seller's own rules say
   // to do about it — both worth knowing before a parcel goes out on COD.
+  const returnRecorded = order.status === "returned" ? await hasReturnRecord(id) : false;
+
   const [risk, decision] = await Promise.all([
     customer ? getCustomerRisk(customer.id) : Promise.resolve(null),
     getConfirmationDecision(id),
@@ -385,6 +389,10 @@ export default async function OrderDetailPage({ params }: { params: Promise<{ id
 
           {/* Said before the buttons, not after: this is the moment the seller decides. */}
           <ConfirmationPanel copy={t.confirmation} riskCopy={t.risk} decision={decision} />
+
+          {status === "returned" ? (
+            <RecordReturn copy={t.returns} orderId={order.id as string} alreadyRecorded={returnRecorded} />
+          ) : null}
 
           <StatusActions canCancel={can(membership?.role, "cancel_order")} orders={t.orders} orderId={order.id as string} status={status} />
 

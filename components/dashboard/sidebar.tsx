@@ -12,6 +12,7 @@ import {
   LogOut,
   MessagesSquare,
   Package,
+  PackageX,
   Plug,
   Settings,
   ShieldCheck,
@@ -54,6 +55,7 @@ export function Sidebar({
     { href: "/inventory", label: nav.inventory, icon: Boxes },
     { href: "/couriers", label: nav.couriers, icon: Truck },
     { href: "/cod", label: nav.cod, icon: Banknote },
+    { href: "/returns", label: nav.returns, icon: PackageX },
   ];
 
   const preference: { href: string; label: string; icon: LucideIcon }[] = [
