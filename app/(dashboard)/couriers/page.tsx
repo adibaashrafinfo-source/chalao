@@ -3,8 +3,10 @@ import { Truck } from "lucide-react";
 
 import { ConnectCourier } from "@/components/couriers/connect-courier";
 import { CourierCard, type CourierAccountRow } from "@/components/couriers/courier-card";
+import { CourierPerformance } from "@/components/couriers/courier-performance";
 import { Topbar } from "@/components/dashboard/topbar";
 import { getUserInitials } from "@/lib/dashboard/user";
+import { getCourierPerformance } from "@/lib/couriers/performance";
 import { listCourierAdapters } from "@/lib/couriers/registry";
 import { getMessages } from "@/lib/i18n";
 import { can } from "@/lib/permissions";
@@ -19,6 +21,8 @@ export default async function CouriersPage() {
   const membership = await getMembership();
   const supabase = await createClient();
   const initials = await getUserInitials();
+
+  const performance = await getCourierPerformance(membership?.organizationId ?? "");
 
   const { data, error } = await supabase
     .from("courier_accounts")
@@ -50,6 +54,8 @@ export default async function CouriersPage() {
         <div className="flex justify-end">
           <ConnectCourier canManage={can(membership?.role, "manage_couriers")} couriers={t.couriers} providers={providers} />
         </div>
+
+        <CourierPerformance copy={t.couriers.performance} rows={performance} />
 
         {error ? (
           <p className="rounded-xl bg-danger-tint px-6 py-5 text-sm text-danger">{error.message}</p>

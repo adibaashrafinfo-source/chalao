@@ -1,5 +1,6 @@
 import "server-only";
 
+import type { Brief } from "@/components/dashboard/morning-brief";
 import { createClient } from "@/lib/supabase/server";
 
 // All windows are computed in the server's local timezone, which for this product is
@@ -244,4 +245,21 @@ export async function getAlerts(organizationId: string): Promise<AlertItem[]> {
   }
 
   return alerts;
+}
+
+/** The one-line version of the day, for the strip at the top of the dashboard. */
+export async function getMorningBrief(organizationId: string): Promise<Brief> {
+  const supabase = await createClient();
+  const { data } = await supabase.rpc("morning_brief", { p_organization_id: organizationId });
+
+  const row = (data ?? {}) as Record<string, number>;
+  return {
+    toConfirm: Number(row.to_confirm ?? 0),
+    stuckParcels: Number(row.stuck_parcels ?? 0),
+    lowStock: Number(row.low_stock ?? 0),
+    codOutstanding: Number(row.cod_outstanding ?? 0),
+    codParcels: Number(row.cod_parcels ?? 0),
+    returnsToRecord: Number(row.returns_to_record ?? 0),
+    unreadMessages: Number(row.unread_messages ?? 0),
+  };
 }

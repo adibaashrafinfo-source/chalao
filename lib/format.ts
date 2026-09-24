@@ -35,3 +35,19 @@ export function formatCount(value: Amount): string {
   const n = toNumber(value);
   return n === null ? "0" : groupedInteger.format(n);
 }
+
+/**
+ * Fills in a count and picks the right form of the words around it.
+ *
+ *   plural("{count} order|orders waiting", 1) → "1 order waiting"
+ *   plural("{count} order|orders waiting", 9) → "9 orders waiting"
+ *
+ * Written because "1 parcels" kept reaching the screen: English sentences with
+ * a number in them need two spellings, and remembering that by hand each time
+ * does not work.
+ */
+export function plural(template: string, count: number): string {
+  return template
+    .replace(/\{count\}/g, formatCount(count))
+    .replace(/(\S+)\|(\S+)/g, (_match, one: string, many: string) => (count === 1 ? one : many));
+}

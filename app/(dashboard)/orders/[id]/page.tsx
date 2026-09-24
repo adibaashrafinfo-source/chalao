@@ -12,6 +12,7 @@ import { OrderDetailsForm } from "@/components/orders/order-details-form";
 import { OrderItems, type OrderItemRow } from "@/components/orders/order-items";
 import type { VariantOption } from "@/components/orders/order-form";
 import { StatusActions } from "@/components/orders/status-actions";
+import { WhatsAppButton } from "@/components/orders/whatsapp-button";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { getUserInitials } from "@/lib/dashboard/user";
@@ -217,6 +218,16 @@ export default async function OrderDetailPage({ params }: { params: Promise<{ id
               {t.orders.backToList}
             </Link>
             <div className="flex items-center gap-2">
+              {customer?.phone ? (
+                <WhatsAppButton
+                  copy={t.orders.whatsapp}
+                  phone={customer.phone}
+                  orderNumber={order.order_number as number}
+                  total={Number(order.total)}
+                  items={items}
+                  address={[(order.delivery_address as string | null) ?? customer.address, (order.district as string | null) ?? customer.district].filter(Boolean).join(", ")}
+                />
+              ) : null}
               <Button asChild variant="outline" size="sm">
                 <Link href={`/orders/${order.id}/invoice`}>
                   <Printer className="size-4" aria-hidden="true" />

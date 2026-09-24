@@ -280,6 +280,16 @@ export const en = {
         month: "30 Days",
         empty: "No orders in this period yet.",
       },
+      brief: {
+        title: "Today",
+        allClear: "Nothing waiting. Everything is where it should be.",
+        toConfirm: "{count} order|orders waiting to be confirmed",
+        stuckParcels: "{count} parcel|parcels with no update for three days",
+        lowStock: "{count} product|products running low",
+        codOutstanding: "{amount} not yet paid by couriers, across {count} parcel|parcels",
+        returnsToRecord: "{count} return|returns still to be written down",
+        unreadMessages: "{count} unread message|messages",
+      },
       alerts: {
         title: "Alerts",
         lowStock: "Low stock",
@@ -1228,6 +1238,20 @@ export const en = {
   },
 
   couriers: {
+    performance: {
+      title: "How your couriers are doing",
+      subtitle: "Parcels booked in the last 90 days",
+      courier: "Courier",
+      sent: "Sent",
+      delivered: "Delivered",
+      returned: "Returned",
+      returnRate: "Came back",
+      avgDays: "Average time",
+      charges: "Charges",
+      days: "{days} days",
+      inFlight: "{count} still out",
+      note: "The return rate counts only parcels that reached a conclusion. Charges come from the payouts you have recorded.",
+    },
     title: "Couriers",
     subtitle: "Connect a courier once, then book parcels straight from an order",
     connect: "Connect courier",
@@ -1374,6 +1398,16 @@ export const en = {
     detailSubtitle: "Order details, items and status",
     backToList: "Back to orders",
     fromConversation: "Open the conversation this came from",
+    whatsapp: {
+      send: "WhatsApp",
+      // Written to the customer, so it is in their language rather than the
+      // seller-facing English of the rest of the dashboard.
+      greeting: "আসসালামু আলাইকুম। আপনার অর্ডারটি আমরা পেয়েছি।",
+      orderNumber: "অর্ডার নম্বর",
+      total: "মোট",
+      address: "ঠিকানা",
+      question: "অর্ডারটি কি কনফার্ম করবো? ঠিকানা ঠিক আছে কি না একটু জানাবেন।",
+    },
     forConversation: "Creating an order from a conversation",
     columns: {
       order: "Order #",

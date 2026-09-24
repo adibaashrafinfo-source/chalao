@@ -3,10 +3,11 @@ import Link from "next/link";
 import { CircleCheck, Clock, PackageX, TriangleAlert, Truck, type LucideIcon } from "lucide-react";
 
 import { LimitNotice } from "@/components/billing/limit-notice";
+import { MorningBrief } from "@/components/dashboard/morning-brief";
 import { RevenueChart } from "@/components/dashboard/revenue-chart";
 import { StatCard } from "@/components/dashboard/stat-card";
 import { Topbar } from "@/components/dashboard/topbar";
-import { getAlerts, getDashboardData, type AlertItem, type Range } from "@/lib/dashboard/metrics";
+import { getAlerts, getDashboardData, getMorningBrief, type AlertItem, type Range } from "@/lib/dashboard/metrics";
 import { getUserInitials } from "@/lib/dashboard/user";
 import { formatBDT, formatCount } from "@/lib/format";
 import { getMessages } from "@/lib/i18n";
@@ -45,9 +46,10 @@ export default async function DashboardPage({
   const initials = await getUserInitials();
 
   const supabase = await createClient();
-  const [{ stats, chart }, alerts, gate, { data: subscription }] = await Promise.all([
+  const [{ stats, chart }, alerts, brief, gate, { data: subscription }] = await Promise.all([
     getDashboardData(organizationId, range),
     getAlerts(organizationId),
+    getMorningBrief(organizationId),
     getOrderGate(organizationId),
     supabase
       .from("organization_subscriptions")
@@ -73,6 +75,9 @@ export default async function DashboardPage({
           gate={gate}
           periodEnd={(subscription?.current_period_end as string | null) ?? null}
         />
+
+        {/* ---- what needs doing today, before any numbers ---- */}
+        <MorningBrief copy={home.brief} brief={brief} />
 
         {/* ---- stat cards ---- */}
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
