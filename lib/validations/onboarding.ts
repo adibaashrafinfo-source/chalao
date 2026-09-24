@@ -9,4 +9,21 @@ export const onboardingSchema = z.object({
   businessType: z.enum(businessTypeValues),
 });
 
+// Optional: both are only printed on the invoice.
+const optionalText = (max: number) =>
+  z
+    .string()
+    .trim()
+    .max(max)
+    .transform((value) => (value === "" ? null : value))
+    .nullable()
+    .optional();
+
+export const organizationDetailsSchema = onboardingSchema.extend({
+  phone: optionalText(30),
+  address: optionalText(300),
+});
+
+export type OrganizationDetailsValues = z.input<typeof organizationDetailsSchema>;
+
 export type OnboardingValues = z.infer<typeof onboardingSchema>;

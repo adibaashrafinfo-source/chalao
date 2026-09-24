@@ -206,3 +206,15 @@
     letter-spacing: -0.01em;
   }
 }
+
+/* Printing is for the invoice. Everything that helps someone move around the
+   dashboard is noise on paper. */
+@media print {
+  [data-print-hide] {
+    display: none !important;
+  }
+
+  body {
+    background: #fff;
+  }
+}

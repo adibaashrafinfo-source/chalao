@@ -1,6 +1,7 @@
 import { redirect } from "next/navigation";
 
 import { QueryProvider } from "@/components/providers/query-provider";
+import { MobileNav } from "@/components/dashboard/mobile-nav";
 import { Sidebar } from "@/components/dashboard/sidebar";
 import { getMessages } from "@/lib/i18n";
 import { isPlatformAdmin } from "@/lib/site-settings";
@@ -36,7 +37,15 @@ export default async function DashboardLayout({ children }: { children: React.Re
           role={membership.role}
           isPlatformAdmin={admin}
         />
-        <div className="flex min-w-0 flex-1 flex-col">{children}</div>
+        <div className="flex min-w-0 flex-1 flex-col">
+          <MobileNav
+            nav={t.dashboard.nav}
+            organizationName={membership.organizationName}
+            role={membership.role}
+            isPlatformAdmin={admin}
+          />
+          {children}
+        </div>
       </div>
     </QueryProvider>
   );

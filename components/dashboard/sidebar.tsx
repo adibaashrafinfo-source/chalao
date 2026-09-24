@@ -2,31 +2,11 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import {
-  Banknote,
-  Boxes,
-  ChevronDown,
-  CircleQuestionMark,
-  CreditCard,
-  LayoutDashboard,
-  LogOut,
-  MessagesSquare,
-  Package,
-  PackageX,
-  Plug,
-  Settings,
-  ShieldCheck,
-  ShoppingBag,
-  SlidersHorizontal,
-  TrendingUp,
-  Truck,
-  UserPlus,
-  Users,
-  type LucideIcon,
-} from "lucide-react";
+import { ChevronDown, LogOut } from "lucide-react";
 
 import { signOutAction } from "@/app/(auth)/actions";
 import { Logo } from "@/components/brand/logo";
+import { dashboardNav, type NavItem } from "@/lib/dashboard/nav";
 import type { Messages } from "@/lib/i18n";
 import { cn } from "@/lib/utils";
 
@@ -47,28 +27,7 @@ export function Sidebar({
 }) {
   const pathname = usePathname();
 
-  const mainMenu: { href: string; label: string; icon: LucideIcon }[] = [
-    { href: "/dashboard", label: nav.dashboard, icon: LayoutDashboard },
-    { href: "/inbox", label: nav.inbox, icon: MessagesSquare },
-    { href: "/orders", label: nav.orders, icon: ShoppingBag },
-    { href: "/customers", label: nav.customers, icon: Users },
-    { href: "/products", label: nav.products, icon: Package },
-    { href: "/inventory", label: nav.inventory, icon: Boxes },
-    { href: "/couriers", label: nav.couriers, icon: Truck },
-    { href: "/cod", label: nav.cod, icon: Banknote },
-    { href: "/returns", label: nav.returns, icon: PackageX },
-    { href: "/profit", label: nav.profit, icon: TrendingUp },
-  ];
-
-  const preference: { href: string; label: string; icon: LucideIcon }[] = [
-    ...(isPlatformAdmin ? [{ href: "/admin", label: nav.admin, icon: ShieldCheck }] : []),
-    { href: "/settings/channels", label: nav.channels, icon: Plug },
-    { href: "/settings/orders", label: nav.orderRules, icon: SlidersHorizontal },
-    { href: "/settings/team", label: nav.team, icon: UserPlus },
-    { href: "/settings/billing", label: nav.billing, icon: CreditCard },
-    { href: "/settings/organization", label: nav.settings, icon: Settings },
-    { href: "/help", label: nav.help, icon: CircleQuestionMark },
-  ];
+  const { mainMenu, preference } = dashboardNav(nav, isPlatformAdmin);
 
   const initials =
     organizationName
@@ -77,7 +36,7 @@ export function Sidebar({
       .map((word) => word[0]?.toUpperCase() ?? "")
       .join("") || "OS";
 
-  const renderLink = ({ href, label, icon: Icon }: { href: string; label: string; icon: LucideIcon }) => {
+  const renderLink = ({ href, label, icon: Icon }: NavItem) => {
     const active = pathname === href || pathname.startsWith(`${href}/`);
     return (
       <Link
@@ -98,7 +57,7 @@ export function Sidebar({
   };
 
   return (
-    <aside className="hidden w-[260px] shrink-0 flex-col gap-5 border-r border-border-subtle bg-surface p-4 lg:flex">
+    <aside data-print-hide className="hidden w-[260px] shrink-0 flex-col gap-5 border-r border-border-subtle bg-surface p-4 lg:flex">
       <Link href="/dashboard" className="flex items-center px-1 pt-1">
         <Logo height="h-8" />
       </Link>

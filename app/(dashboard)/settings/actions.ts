@@ -11,9 +11,20 @@ import { businessTypeValues } from "@/lib/validations/onboarding";
 
 export type ActionResult = { error?: string };
 
+const optionalText = (max: number) =>
+  z
+    .string()
+    .trim()
+    .max(max)
+    .transform((value) => (value === "" ? null : value))
+    .nullable();
+
 const organizationSchema = z.object({
   name: z.string().trim().min(2, "Business name is required").max(120),
   businessType: z.enum(businessTypeValues),
+  // Both are optional, and both only show up on the invoice.
+  phone: optionalText(30),
+  address: optionalText(300),
 });
 
 // Empty string clears the link; anything else must be a real https address.
@@ -47,7 +58,12 @@ export async function updateOrganizationAction(values: unknown): Promise<ActionR
   const supabase = await createClient();
   const { error } = await supabase
     .from("organizations")
-    .update({ name: parsed.data.name, business_type: parsed.data.businessType })
+    .update({
+      name: parsed.data.name,
+      business_type: parsed.data.businessType,
+      phone: parsed.data.phone,
+      address: parsed.data.address,
+    })
     .eq("id", membership.organizationId);
 
   // RLS lets only the owner through, and returns no rows for anyone else.

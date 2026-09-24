@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { ArrowLeft, Lock, MessagesSquare } from "lucide-react";
+import { ArrowLeft, Lock, MessagesSquare, Printer } from "lucide-react";
 
 import { BookShipment, type CourierChoice } from "@/components/couriers/book-shipment";
 import { Topbar } from "@/components/dashboard/topbar";
@@ -13,6 +13,7 @@ import { OrderItems, type OrderItemRow } from "@/components/orders/order-items";
 import type { VariantOption } from "@/components/orders/order-form";
 import { StatusActions } from "@/components/orders/status-actions";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { getUserInitials } from "@/lib/dashboard/user";
 import { formatBDT } from "@/lib/format";
 import { getMessages } from "@/lib/i18n";
@@ -216,6 +217,12 @@ export default async function OrderDetailPage({ params }: { params: Promise<{ id
               {t.orders.backToList}
             </Link>
             <div className="flex items-center gap-2">
+              <Button asChild variant="outline" size="sm">
+                <Link href={`/orders/${order.id}/invoice`}>
+                  <Printer className="size-4" aria-hidden="true" />
+                  {t.invoice.open}
+                </Link>
+              </Button>
               <Badge variant={orderStatusTone(status)}>{orderStatusLabel(status)}</Badge>
               <span className="text-sm text-text-secondary">{orderSourceLabel(order.source as string)}</span>
             </div>

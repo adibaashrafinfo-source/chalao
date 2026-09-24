@@ -26,7 +26,7 @@ export default async function OrganizationSettingsPage() {
   const [{ data: organization }, admin] = await Promise.all([
     supabase
       .from("organizations")
-      .select("id, name, business_type")
+      .select("id, name, business_type, phone, address")
       .eq("id", membership.organizationId)
       .maybeSingle(),
     isPlatformAdmin(),
@@ -50,6 +50,8 @@ export default async function OrganizationSettingsPage() {
             defaults={{
               name: (organization?.name as string) ?? membership.organizationName,
               businessType: ((organization?.business_type as BusinessType) ?? "other") as BusinessType,
+              phone: (organization?.phone as string | null) ?? null,
+              address: (organization?.address as string | null) ?? null,
             }}
           />
 

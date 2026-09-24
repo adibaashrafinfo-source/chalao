@@ -19,12 +19,14 @@ export function OrganizationForm({
 }: {
   copy: Messages["settings"]["organization"];
   businessTypeLabels: Messages["onboarding"]["businessTypes"];
-  defaults: { name: string; businessType: BusinessType };
+  defaults: { name: string; businessType: BusinessType; phone: string | null; address: string | null };
   canEdit: boolean;
 }) {
   const router = useRouter();
   const [name, setName] = useState(defaults.name);
   const [businessType, setBusinessType] = useState<BusinessType>(defaults.businessType);
+  const [phone, setPhone] = useState(defaults.phone ?? "");
+  const [address, setAddress] = useState(defaults.address ?? "");
   const [error, setError] = useState<string | null>(null);
   const [saved, setSaved] = useState(false);
   const [pending, setPending] = useState(false);
@@ -35,7 +37,7 @@ export function OrganizationForm({
     setError(null);
     setSaved(false);
 
-    const result = await updateOrganizationAction({ name, businessType });
+    const result = await updateOrganizationAction({ name, businessType, phone, address });
 
     setPending(false);
     if (result?.error) {
@@ -74,6 +76,29 @@ export function OrganizationForm({
             </option>
           ))}
         </select>
+      </div>
+
+      {/* Both are printed on the invoice that goes inside the parcel. */}
+      <div className="flex flex-col gap-2">
+        <Label htmlFor="org-phone">{copy.phone}</Label>
+        <Input
+          id="org-phone"
+          value={phone}
+          disabled={!canEdit}
+          onChange={(event) => setPhone(event.target.value)}
+        />
+        <p className="text-xs text-text-muted">{copy.phoneHint}</p>
+      </div>
+
+      <div className="flex flex-col gap-2">
+        <Label htmlFor="org-address">{copy.address}</Label>
+        <Input
+          id="org-address"
+          value={address}
+          disabled={!canEdit}
+          onChange={(event) => setAddress(event.target.value)}
+        />
+        <p className="text-xs text-text-muted">{copy.addressHint}</p>
       </div>
 
       {!canEdit && <p className="text-sm text-text-secondary">{copy.ownerOnly}</p>}
