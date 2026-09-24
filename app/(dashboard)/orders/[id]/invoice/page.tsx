@@ -3,7 +3,7 @@ import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 import { ArrowLeft } from "lucide-react";
 
-import { Logo } from "@/components/brand/logo";
+import Image from "next/image";
 import { PrintButton } from "@/components/orders/print-button";
 import { formatBDT } from "@/lib/format";
 import { getMessages } from "@/lib/i18n";
@@ -37,7 +37,7 @@ export default async function InvoicePage({ params }: { params: Promise<{ id: st
       .maybeSingle(),
     supabase
       .from("organizations")
-      .select("name, phone, address")
+      .select("name, phone, address, logo_url")
       .eq("id", membership.organizationId)
       .maybeSingle(),
     supabase
@@ -77,7 +77,18 @@ export default async function InvoicePage({ params }: { params: Promise<{ id: st
       <article className="mx-auto flex min-h-[297mm] max-w-[210mm] flex-col gap-6 bg-white p-8 shadow-xs print:min-h-0 print:p-0 print:shadow-none">
         <header className="flex flex-wrap items-start justify-between gap-4 border-b border-border-subtle pb-6">
           <div className="flex flex-col gap-2">
-            <Logo height="h-8" />
+            {/* The seller's own mark when they have one. A customer opening a
+                parcel should see the shop, not the software it uses. */}
+            {organization?.logo_url ? (
+              <Image
+                src={organization.logo_url as string}
+                alt={(organization?.name as string) ?? ""}
+                width={200}
+                height={80}
+                unoptimized
+                className="max-h-16 w-auto object-contain"
+              />
+            ) : null}
             <p className="font-display text-lg font-semibold text-brand-dark">{organization?.name}</p>
             {organization?.address ? (
               <p className="max-w-xs text-xs leading-relaxed text-text-secondary">{organization.address}</p>

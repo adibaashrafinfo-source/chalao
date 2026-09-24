@@ -4,6 +4,7 @@ import { redirect } from "next/navigation";
 import { Globe } from "lucide-react";
 
 import { Topbar } from "@/components/dashboard/topbar";
+import { LogoUpload } from "@/components/settings/logo-upload";
 import { OrganizationForm } from "@/components/settings/organization-form";
 import { getUserInitials } from "@/lib/dashboard/user";
 import { getMessages } from "@/lib/i18n";
@@ -26,7 +27,7 @@ export default async function OrganizationSettingsPage() {
   const [{ data: organization }, admin] = await Promise.all([
     supabase
       .from("organizations")
-      .select("id, name, business_type, phone, address")
+      .select("id, name, business_type, phone, address, logo_url")
       .eq("id", membership.organizationId)
       .maybeSingle(),
     isPlatformAdmin(),
@@ -43,6 +44,13 @@ export default async function OrganizationSettingsPage() {
 
       <main className="flex-1 p-4 sm:p-6">
         <div className="mx-auto flex max-w-3xl flex-col gap-4">
+          <LogoUpload
+            copy={t.settings.organization}
+            organizationId={membership.organizationId}
+            logoUrl={(organization?.logo_url as string | null) ?? null}
+            canEdit={membership.role === "owner"}
+          />
+
           <OrganizationForm
             copy={t.settings.organization}
             businessTypeLabels={t.onboarding.businessTypes}

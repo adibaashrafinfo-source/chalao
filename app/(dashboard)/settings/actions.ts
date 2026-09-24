@@ -98,3 +98,25 @@ export async function updateSiteSettingsAction(values: unknown): Promise<ActionR
   revalidatePath("/settings/site");
   return {};
 }
+
+/**
+ * Stores the address of a logo the browser has just uploaded. The file itself
+ * went straight to Storage, where the policy checked that this person belongs
+ * to the organization whose folder it landed in.
+ */
+export async function saveLogoAction(logoUrl: string | null): Promise<ActionResult> {
+  const membership = await getMembership();
+  if (!membership) redirect("/onboarding");
+  if (membership.role !== "owner") return { error: "Only the owner can change these details." };
+
+  const supabase = await createClient();
+  const { error } = await supabase
+    .from("organizations")
+    .update({ logo_url: logoUrl })
+    .eq("id", membership.organizationId);
+
+  if (error) return { error: error.message };
+
+  revalidatePath("/settings/organization");
+  return {};
+}
