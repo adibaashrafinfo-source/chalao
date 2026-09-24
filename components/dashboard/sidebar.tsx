@@ -18,6 +18,7 @@ import {
   ShieldCheck,
   ShoppingBag,
   SlidersHorizontal,
+  TrendingUp,
   Truck,
   UserPlus,
   Users,
@@ -56,6 +57,7 @@ export function Sidebar({
     { href: "/couriers", label: nav.couriers, icon: Truck },
     { href: "/cod", label: nav.cod, icon: Banknote },
     { href: "/returns", label: nav.returns, icon: PackageX },
+    { href: "/profit", label: nav.profit, icon: TrendingUp },
   ];
 
   const preference: { href: string; label: string; icon: LucideIcon }[] = [

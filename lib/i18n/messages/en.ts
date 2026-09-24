@@ -230,6 +230,7 @@ export const en = {
       couriers: "Couriers",
       cod: "COD",
       returns: "Returns",
+      profit: "Profit",
       channels: "Channels",
       orderRules: "Order rules",
       team: "Team",
@@ -797,6 +798,49 @@ export const en = {
       sendFailed: "The message was saved but the channel would not take it.",
       generic: "Something went wrong. Try again.",
     },
+  },
+
+  profit: {
+    title: "Profit",
+    subtitle: "What is left after the goods, the courier and the returns",
+    periods: {
+      this_month: "This month",
+      last_month: "Last month",
+      last_30: "Last 30 days",
+    },
+    net: "Net profit",
+    margin: "{margin}% of what was delivered",
+    breakdown: {
+      title: "How it adds up",
+      revenue: "Delivered orders",
+      revenueHint: "{count} parcels that actually arrived",
+      cogs: "What the goods cost",
+      gross: "Gross profit",
+      courier: "Courier charges",
+      courierHint: "Taken out of the money they collected",
+      returns: "Returns",
+      returnsHint: "{count} came back",
+      codDifference: "Payout differences",
+      codShort: "Couriers paid less than the parcels came to",
+      codOver: "Couriers paid more than the parcels came to",
+      codNone: "Every payout added up",
+      net: "Net profit",
+    },
+    products: {
+      title: "What made the money",
+      empty: "Nothing delivered in this period yet.",
+      product: "Product",
+      quantity: "Sold",
+      revenue: "Revenue",
+      cost: "Cost",
+      profit: "Profit",
+    },
+    empty: {
+      title: "No delivered orders in this period",
+      body: "Profit is counted when a parcel arrives, not when the order is taken.",
+    },
+    note:
+      "Counted on delivered parcels only. Courier charges come from the payouts you have recorded, so anything not yet settled is not in here.",
   },
 
   returns: {

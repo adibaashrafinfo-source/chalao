@@ -103,7 +103,7 @@ export async function createOrderAction(values: unknown): Promise<ActionResult> 
   const variantIds = input.items.map((item) => item.variantId);
   const { data: variants } = await supabase
     .from("product_variants")
-    .select("id, name, selling_price, products(name)")
+    .select("id, name, selling_price, cost_price, products(name)")
     .eq("organization_id", organizationId)
     .in("id", variantIds);
 
@@ -161,6 +161,9 @@ export async function createOrderAction(values: unknown): Promise<ActionResult> 
       product_name: productName,
       variant_name: (variant?.name as string | undefined) ?? null,
       unit_price: item.unitPrice,
+      // What the goods cost today, remembered now so last month's profit does not
+      // change when a supplier does.
+      unit_cost: Number(variant?.cost_price ?? 0),
       quantity: item.quantity,
       line_total: item.unitPrice * item.quantity,
     };
@@ -252,7 +255,7 @@ export async function addOrderItemAction(orderId: string, values: unknown): Prom
 
   const { data: variant } = await supabase
     .from("product_variants")
-    .select("id, name, products(name)")
+    .select("id, name, cost_price, products(name)")
     .eq("id", parsed.data.variantId)
     .eq("organization_id", organizationId)
     .maybeSingle();
@@ -269,6 +272,7 @@ export async function addOrderItemAction(orderId: string, values: unknown): Prom
     product_name: productName,
     variant_name: variant.name as string,
     unit_price: parsed.data.unitPrice,
+    unit_cost: Number(variant.cost_price ?? 0),
     quantity: parsed.data.quantity,
     line_total: parsed.data.unitPrice * parsed.data.quantity,
   });
