@@ -7,6 +7,7 @@ import { z } from "zod";
 import { SITE_SETTINGS_TAG } from "@/lib/site-settings";
 import { createClient } from "@/lib/supabase/server";
 import { getMembership } from "@/lib/supabase/queries";
+import { getCurrentUser } from "@/lib/supabase/user";
 import { businessTypeValues } from "@/lib/validations/onboarding";
 
 export type ActionResult = { error?: string };
@@ -118,5 +119,22 @@ export async function saveLogoAction(logoUrl: string | null): Promise<ActionResu
   if (error) return { error: error.message };
 
   revalidatePath("/settings/organization");
+  return {};
+}
+
+/** The language this person reads the dashboard in. Their own choice, not the business's. */
+export async function setLanguageAction(language: string): Promise<ActionResult> {
+  if (language !== "en" && language !== "bn") return { error: "Unknown language" };
+
+  const user = await getCurrentUser();
+  if (!user) redirect("/login");
+
+  const supabase = await createClient();
+  const { error } = await supabase.from("profiles").update({ language }).eq("id", user.id);
+
+  if (error) return { error: error.message };
+
+  // Every dashboard screen reads the dictionary, so they all change at once.
+  revalidatePath("/", "layout");
   return {};
 }

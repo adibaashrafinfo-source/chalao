@@ -4,20 +4,26 @@ import { redirect } from "next/navigation";
 import { Globe } from "lucide-react";
 
 import { Topbar } from "@/components/dashboard/topbar";
+import { LanguagePicker } from "@/components/settings/language-picker";
 import { LogoUpload } from "@/components/settings/logo-upload";
 import { OrganizationForm } from "@/components/settings/organization-form";
 import { getUserInitials } from "@/lib/dashboard/user";
 import { getMessages } from "@/lib/i18n";
+import { getDictionary, getLocale } from "@/lib/i18n/locale";
 import { isPlatformAdmin } from "@/lib/site-settings";
 import { createClient } from "@/lib/supabase/server";
 import { getMembership } from "@/lib/supabase/queries";
 import type { BusinessType } from "@/lib/validations/onboarding";
 
-const t = getMessages("en");
+// Page titles are read once per server, so they stay in English.
+const tEn = getMessages("en");
 
-export const metadata: Metadata = { title: t.settings.organization.title };
+export const metadata: Metadata = { title: tEn.settings.organization.title };
 
 export default async function OrganizationSettingsPage() {
+  // The dictionary is fetched here, not at module level: it is per person.
+  const t = await getDictionary();
+  const locale = await getLocale();
   const membership = await getMembership();
   if (!membership) redirect("/onboarding");
 
@@ -44,6 +50,8 @@ export default async function OrganizationSettingsPage() {
 
       <main className="flex-1 p-4 sm:p-6">
         <div className="mx-auto flex max-w-3xl flex-col gap-4">
+          <LanguagePicker copy={t.settings.language} current={locale} />
+
           <LogoUpload
             copy={t.settings.organization}
             organizationId={membership.organizationId}

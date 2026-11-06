@@ -5,6 +5,7 @@ import { redirect } from "next/navigation";
 import { z } from "zod";
 
 import { getMessages } from "@/lib/i18n";
+import { recordAudit } from "@/lib/audit";
 import { createClient } from "@/lib/supabase/server";
 import { getMembership } from "@/lib/supabase/queries";
 
@@ -55,6 +56,12 @@ export async function saveConfirmationRulesAction(values: unknown): Promise<Acti
   );
 
   if (error) return { error: error.message };
+
+  await recordAudit("rules.update", "confirmation_rules", null, {
+    autoConfirm: input.autoConfirmEnabled,
+    cap: input.autoConfirmMaxTotal,
+    advanceAbove: input.advancePaymentAbove,
+  });
 
   revalidatePath("/settings/orders");
   revalidatePath("/orders");

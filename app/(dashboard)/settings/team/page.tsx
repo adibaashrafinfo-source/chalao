@@ -6,15 +6,19 @@ import { Topbar } from "@/components/dashboard/topbar";
 import { TeamManager } from "@/components/settings/team-manager";
 import { getUserInitials } from "@/lib/dashboard/user";
 import { getMessages } from "@/lib/i18n";
+import { getDictionary } from "@/lib/i18n/locale";
 import { getMembership } from "@/lib/supabase/queries";
 import { getCurrentUser } from "@/lib/supabase/user";
 import { getTeam, getUserLimit, listOpenInvitations } from "@/lib/team/queries";
 
-const t = getMessages("en");
+// Page titles are read once per server, so they stay in English.
+const tEn = getMessages("en");
 
-export const metadata: Metadata = { title: t.team.title };
+export const metadata: Metadata = { title: tEn.team.title };
 
 export default async function TeamPage() {
+  // The dictionary is fetched here, not at module level: it is per person.
+  const t = await getDictionary();
   const membership = await getMembership();
   if (!membership) redirect("/onboarding");
 

@@ -18,6 +18,7 @@ import { Button } from "@/components/ui/button";
 import { getUserInitials } from "@/lib/dashboard/user";
 import { formatBDT } from "@/lib/format";
 import { getMessages } from "@/lib/i18n";
+import { getDictionary } from "@/lib/i18n/locale";
 import { can } from "@/lib/permissions";
 import { getConfirmationDecision } from "@/lib/orders/confirmation";
 import { getCustomerRisk } from "@/lib/risk/queries";
@@ -33,9 +34,10 @@ import { formatPhone } from "@/lib/phone";
 import { createClient } from "@/lib/supabase/server";
 import { getMembership } from "@/lib/supabase/queries";
 
-const t = getMessages("en");
+// Page titles are read once per server, so they stay in English.
+const tEn = getMessages("en");
 
-export const metadata: Metadata = { title: t.orders.listTitle };
+export const metadata: Metadata = { title: tEn.orders.listTitle };
 
 type HistoryRow = {
   id: string;
@@ -83,6 +85,8 @@ const dateTimeFormatter = new Intl.DateTimeFormat("en-GB", {
 });
 
 export default async function OrderDetailPage({ params }: { params: Promise<{ id: string }> }) {
+  // The dictionary is fetched here, not at module level: it is per person.
+  const t = await getDictionary();
   const { id } = await params;
   const membership = await getMembership();
   const organizationId = membership?.organizationId ?? "";

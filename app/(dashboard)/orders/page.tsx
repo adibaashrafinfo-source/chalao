@@ -1,24 +1,24 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { Plus, ShoppingBag } from "lucide-react";
+import { Download, Plus, ShoppingBag } from "lucide-react";
 
 import { LimitNotice } from "@/components/billing/limit-notice";
 import { Topbar } from "@/components/dashboard/topbar";
 import { OrderFilters } from "@/components/orders/order-filters";
-import { Badge } from "@/components/ui/badge";
+import { OrdersTable } from "@/components/orders/orders-table";
 import { Button } from "@/components/ui/button";
 import { getUserInitials } from "@/lib/dashboard/user";
-import { formatBDT } from "@/lib/format";
 import { getMessages } from "@/lib/i18n";
-import { orderSourceLabel, orderStatusLabel, orderStatusTone } from "@/lib/orders/status";
-import { formatPhone, normalizeBdPhone } from "@/lib/phone";
+import { getDictionary } from "@/lib/i18n/locale";
+import { normalizeBdPhone } from "@/lib/phone";
 import { getOrderGate } from "@/lib/subscription";
 import { createClient } from "@/lib/supabase/server";
 import { getMembership } from "@/lib/supabase/queries";
 
-const t = getMessages("en");
+// Page titles are read once per server, so they stay in English.
+const tEn = getMessages("en");
 
-export const metadata: Metadata = { title: t.orders.listTitle };
+export const metadata: Metadata = { title: tEn.orders.listTitle };
 
 type OrderRow = {
   id: string;
@@ -30,19 +30,13 @@ type OrderRow = {
   customers: { name: string; phone: string } | { name: string; phone: string }[] | null;
 };
 
-const dateFormatter = new Intl.DateTimeFormat("en-GB", {
-  day: "2-digit",
-  month: "short",
-  year: "numeric",
-  hour: "2-digit",
-  minute: "2-digit",
-});
-
 export default async function OrdersPage({
   searchParams,
 }: {
   searchParams: Promise<{ q?: string; status?: string; from?: string; to?: string }>;
 }) {
+  // The dictionary is fetched here, not at module level: it is per person.
+  const t = await getDictionary();
   const { q, status, from, to } = await searchParams;
   const membership = await getMembership();
   const supabase = await createClient();
@@ -98,7 +92,15 @@ export default async function OrdersPage({
 
       <main className="flex flex-1 flex-col gap-4 p-4 sm:p-6">
         <LimitNotice limits={t.limits} gate={gate} />
-        <OrderFilters orders={t.orders} />
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <OrderFilters orders={t.orders} />
+          <Button asChild variant="outline" size="sm">
+            <a href={`/api/export/orders?${new URLSearchParams({ ...(term ? { q: term } : {}), ...(status ? { status } : {}), ...(from ? { from } : {}), ...(to ? { to } : {}) }).toString()}`}>
+              <Download className="size-4" aria-hidden="true" />
+              {t.orders.export}
+            </a>
+          </Button>
+        </div>
 
         {error ? (
           <p className="rounded-xl bg-danger-tint px-6 py-5 text-sm text-danger">{error.message}</p>
@@ -123,50 +125,22 @@ export default async function OrdersPage({
             )}
           </div>
         ) : (
-          <div className="overflow-x-auto rounded-xl bg-surface shadow-xs">
-            <table className="w-full min-w-[820px] text-sm">
-              <thead>
-                <tr className="border-b border-border-subtle text-left text-xs tracking-wide text-text-muted">
-                  <th className="px-5 py-4 font-medium">{t.orders.columns.order}</th>
-                  <th className="px-5 py-4 font-medium">{t.orders.columns.customer}</th>
-                  <th className="px-5 py-4 font-medium">{t.orders.columns.phone}</th>
-                  <th className="px-5 py-4 text-right font-medium">{t.orders.columns.total}</th>
-                  <th className="px-5 py-4 font-medium">{t.orders.columns.status}</th>
-                  <th className="px-5 py-4 font-medium">{t.orders.columns.source}</th>
-                  <th className="px-5 py-4 font-medium">{t.orders.columns.created}</th>
-                </tr>
-              </thead>
-              <tbody>
-                {rows.map((order) => {
-                  const customer = Array.isArray(order.customers) ? order.customers[0] : order.customers;
-                  return (
-                    <tr key={order.id} className="border-b border-border-subtle last:border-b-0 hover:bg-surface-alt">
-                      <td className="px-5 py-4">
-                        <Link
-                          href={`/orders/${order.id}`}
-                          className="font-medium tabular-nums text-brand-dark hover:underline"
-                        >
-                          #{order.order_number}
-                        </Link>
-                      </td>
-                      <td className="px-5 py-4 text-text-primary">{customer?.name ?? "—"}</td>
-                      <td className="px-5 py-4 tabular-nums text-text-secondary">
-                        {customer?.phone ? formatPhone(customer.phone) : "—"}
-                      </td>
-                      <td className="px-5 py-4 text-right tabular-nums">{formatBDT(order.total)}</td>
-                      <td className="px-5 py-4">
-                        <Badge variant={orderStatusTone(order.status)}>{orderStatusLabel(order.status)}</Badge>
-                      </td>
-                      <td className="px-5 py-4 text-text-secondary">{orderSourceLabel(order.source)}</td>
-                      <td className="px-5 py-4 text-text-secondary">
-                        {dateFormatter.format(new Date(order.created_at))}
-                      </td>
-                    </tr>
-                  );
-                })}
-              </tbody>
-            </table>
-          </div>
+          <OrdersTable
+            copy={t.orders}
+            orders={rows.map((order) => {
+              const customer = Array.isArray(order.customers) ? order.customers[0] : order.customers;
+              return {
+                id: order.id,
+                orderNumber: order.order_number,
+                customerName: customer?.name ?? null,
+                customerPhone: customer?.phone ?? null,
+                total: Number(order.total),
+                status: order.status,
+                source: order.source,
+                createdAt: order.created_at,
+              };
+            })}
+          />
         )}
       </main>
     </>

@@ -5,6 +5,7 @@ import { redirect } from "next/navigation";
 
 import { getMessages } from "@/lib/i18n";
 import { requirePermission } from "@/lib/permissions-server";
+import { recordAudit } from "@/lib/audit";
 import { createClient } from "@/lib/supabase/server";
 import { getMembership } from "@/lib/supabase/queries";
 import { productSchema, stockAdjustmentSchema, variantSchema } from "@/lib/validations/product";
@@ -110,6 +111,8 @@ export async function deleteProductAction(productId: string): Promise<ActionResu
 
   // 23503 = the inventory ledger still references a variant of this product.
   if (error) return { error: error.code === "23503" ? t.products.errors.hasHistory : error.message };
+
+  await recordAudit("product.delete", "product", productId);
 
   revalidatePath("/products");
   redirect("/products");

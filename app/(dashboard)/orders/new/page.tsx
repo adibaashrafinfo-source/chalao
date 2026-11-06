@@ -9,13 +9,15 @@ import { OrderForm, type VariantOption } from "@/components/orders/order-form";
 import { Button } from "@/components/ui/button";
 import { getUserInitials } from "@/lib/dashboard/user";
 import { getMessages } from "@/lib/i18n";
+import { getDictionary } from "@/lib/i18n/locale";
 import { getOrderGate } from "@/lib/subscription";
 import { createClient } from "@/lib/supabase/server";
 import { getMembership } from "@/lib/supabase/queries";
 
-const t = getMessages("en");
+// Page titles are read once per server, so they stay in English.
+const tEn = getMessages("en");
 
-export const metadata: Metadata = { title: t.orders.newTitle };
+export const metadata: Metadata = { title: tEn.orders.newTitle };
 
 type VariantRow = {
   id: string;
@@ -31,6 +33,8 @@ export default async function NewOrderPage({
 }: {
   searchParams: Promise<{ conversation?: string }>;
 }) {
+  // The dictionary is fetched here, not at module level: it is per person.
+  const t = await getDictionary();
   const { conversation: conversationParam } = await searchParams;
   const membership = await getMembership();
   const supabase = await createClient();

@@ -7,19 +7,23 @@ import Image from "next/image";
 import { PrintButton } from "@/components/orders/print-button";
 import { formatBDT } from "@/lib/format";
 import { getMessages } from "@/lib/i18n";
+import { getDictionary } from "@/lib/i18n/locale";
 import { formatPhone } from "@/lib/phone";
 import { createClient } from "@/lib/supabase/server";
 import { getMembership } from "@/lib/supabase/queries";
 
-const t = getMessages("en");
+// Page titles are read once per server, so they stay in English.
+const tEn = getMessages("en");
 
-export const metadata: Metadata = { title: t.invoice.title };
+export const metadata: Metadata = { title: tEn.invoice.title };
 
 const dateFormatter = new Intl.DateTimeFormat("en-GB", { day: "2-digit", month: "short", year: "numeric" });
 
 type ItemRow = { id: string; product_name: string; variant_name: string | null; unit_price: number; quantity: number; line_total: number };
 
 export default async function InvoicePage({ params }: { params: Promise<{ id: string }> }) {
+  // The dictionary is fetched here, not at module level: it is per person.
+  const t = await getDictionary();
   const { id } = await params;
   const membership = await getMembership();
   if (!membership) redirect("/onboarding");

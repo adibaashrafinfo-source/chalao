@@ -6,13 +6,15 @@ import { Topbar } from "@/components/dashboard/topbar";
 import { getUserInitials } from "@/lib/dashboard/user";
 import { formatBDT, formatCount } from "@/lib/format";
 import { getMessages } from "@/lib/i18n";
+import { getDictionary } from "@/lib/i18n/locale";
 import { getProductProfit, getProfitSummary, periodRange, type PeriodKey } from "@/lib/profit/queries";
 import { getMembership } from "@/lib/supabase/queries";
 import { cn } from "@/lib/utils";
 
-const t = getMessages("en");
+// Page titles are read once per server, so they stay in English.
+const tEn = getMessages("en");
 
-export const metadata: Metadata = { title: t.profit.title };
+export const metadata: Metadata = { title: tEn.profit.title };
 
 const PERIODS: PeriodKey[] = ["this_month", "last_month", "last_30"];
 
@@ -59,6 +61,8 @@ export default async function ProfitPage({
 }: {
   searchParams: Promise<{ period?: string }>;
 }) {
+  // The dictionary is fetched here, not at module level: it is per person.
+  const t = await getDictionary();
   const { period: periodParam } = await searchParams;
   const period = (PERIODS.includes(periodParam as PeriodKey) ? periodParam : "this_month") as PeriodKey;
 

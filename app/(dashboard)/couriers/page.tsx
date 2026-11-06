@@ -9,15 +9,19 @@ import { getUserInitials } from "@/lib/dashboard/user";
 import { getCourierPerformance } from "@/lib/couriers/performance";
 import { listCourierAdapters } from "@/lib/couriers/registry";
 import { getMessages } from "@/lib/i18n";
+import { getDictionary } from "@/lib/i18n/locale";
 import { can } from "@/lib/permissions";
 import { createClient } from "@/lib/supabase/server";
 import { getMembership } from "@/lib/supabase/queries";
 
-const t = getMessages("en");
+// Page titles are read once per server, so they stay in English.
+const tEn = getMessages("en");
 
-export const metadata: Metadata = { title: t.couriers.title };
+export const metadata: Metadata = { title: tEn.couriers.title };
 
 export default async function CouriersPage() {
+  // The dictionary is fetched here, not at module level: it is per person.
+  const t = await getDictionary();
   const membership = await getMembership();
   const supabase = await createClient();
   const initials = await getUserInitials();

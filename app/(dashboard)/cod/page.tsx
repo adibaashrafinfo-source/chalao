@@ -10,17 +10,21 @@ import { getCodSummary, listPayouts, listUnsettledShipments } from "@/lib/cod/qu
 import { getUserInitials } from "@/lib/dashboard/user";
 import { formatBDT, formatCount } from "@/lib/format";
 import { getMessages } from "@/lib/i18n";
+import { getDictionary } from "@/lib/i18n/locale";
 import { can } from "@/lib/permissions";
 import { createClient } from "@/lib/supabase/server";
 import { getMembership } from "@/lib/supabase/queries";
 
-const t = getMessages("en");
+// Page titles are read once per server, so they stay in English.
+const tEn = getMessages("en");
 
-export const metadata: Metadata = { title: t.cod.title };
+export const metadata: Metadata = { title: tEn.cod.title };
 
 const dateFormatter = new Intl.DateTimeFormat("en-GB", { day: "2-digit", month: "short" });
 
 export default async function CodPage() {
+  // The dictionary is fetched here, not at module level: it is per person.
+  const t = await getDictionary();
   const membership = await getMembership();
   if (!membership) redirect("/onboarding");
   const organizationId = membership.organizationId;

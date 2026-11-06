@@ -350,3 +350,51 @@ export async function transitionOrderStatusAction(
   revalidatePath("/products");
   return {};
 }
+
+export type BulkResult = { moved?: number; failed?: string[]; error?: string };
+
+/**
+ * Moves several orders at once, one at a time through the same state machine.
+ *
+ * Nothing is forced: an order that cannot make the move — wrong status, stock
+ * gone, plan limit — is left alone and named in the result. A silent partial
+ * success would be worse than doing them by hand.
+ */
+export async function bulkTransitionAction(orderIds: string[], newStatus: string): Promise<BulkResult> {
+  if (orderIds.length === 0) return { moved: 0, failed: [] };
+  if (orderIds.length > 100) return { error: t.orders.errors.tooMany };
+
+  const organizationId = await requireOrg();
+
+  if (newStatus === "cancelled") {
+    const allowed = await requirePermission("cancel_order");
+    if (allowed.error) return { error: allowed.error };
+  }
+
+  const supabase = await createClient();
+
+  // Only this organization's orders, whatever the browser sent.
+  const { data: orders } = await supabase
+    .from("orders")
+    .select("id, order_number")
+    .eq("organization_id", organizationId)
+    .in("id", orderIds);
+
+  let moved = 0;
+  const failed: string[] = [];
+
+  for (const order of orders ?? []) {
+    const { error } = await supabase.rpc("transition_order_status", {
+      p_order_id: order.id,
+      p_new_status: newStatus,
+      p_note: null,
+    });
+
+    if (error) failed.push(`#${order.order_number}`);
+    else moved += 1;
+  }
+
+  revalidatePath("/orders");
+  revalidatePath("/dashboard");
+  return { moved, failed };
+}

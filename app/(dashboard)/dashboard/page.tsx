@@ -11,20 +11,16 @@ import { getAlerts, getDashboardData, getMorningBrief, type AlertItem, type Rang
 import { getUserInitials } from "@/lib/dashboard/user";
 import { formatBDT, formatCount } from "@/lib/format";
 import { getMessages } from "@/lib/i18n";
+import { getDictionary } from "@/lib/i18n/locale";
 import { getOrderGate } from "@/lib/subscription";
 import { createClient } from "@/lib/supabase/server";
 import { getMembership } from "@/lib/supabase/queries";
 import { cn } from "@/lib/utils";
 
-const t = getMessages("en");
+// Page titles are read once per server, so they stay in English.
+const tEn = getMessages("en");
 
-export const metadata: Metadata = { title: t.dashboard.nav.dashboard };
-
-const ranges: { key: Range; label: string }[] = [
-  { key: "today", label: t.dashboard.home.chart.today },
-  { key: "7d", label: t.dashboard.home.chart.week },
-  { key: "30d", label: t.dashboard.home.chart.month },
-];
+export const metadata: Metadata = { title: tEn.dashboard.nav.dashboard };
 
 const alertIcons: Record<AlertItem["kind"], LucideIcon> = {
   out_of_stock: PackageX,
@@ -38,6 +34,14 @@ export default async function DashboardPage({
 }: {
   searchParams: Promise<{ range?: string }>;
 }) {
+  // The dictionary is fetched here, not at module level: it is per person.
+  const t = await getDictionary();
+
+  const ranges: { key: Range; label: string }[] = [
+    { key: "today", label: t.dashboard.home.chart.today },
+    { key: "7d", label: t.dashboard.home.chart.week },
+    { key: "30d", label: t.dashboard.home.chart.month },
+  ];
   const { range: rangeParam } = await searchParams;
   const range: Range = rangeParam === "today" || rangeParam === "30d" ? rangeParam : "7d";
 

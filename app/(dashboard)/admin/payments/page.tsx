@@ -11,12 +11,14 @@ import { listSubmissions } from "@/lib/admin/queries";
 import { getUserInitials } from "@/lib/dashboard/user";
 import { formatBDT, formatCount } from "@/lib/format";
 import { getMessages } from "@/lib/i18n";
+import { getDictionary } from "@/lib/i18n/locale";
 import { isPlatformAdmin } from "@/lib/site-settings";
 import { cn } from "@/lib/utils";
 
-const t = getMessages("en");
+// Page titles are read once per server, so they stay in English.
+const tEn = getMessages("en");
 
-export const metadata: Metadata = { title: t.admin.payments.title };
+export const metadata: Metadata = { title: tEn.admin.payments.title };
 
 const dateTimeFormatter = new Intl.DateTimeFormat("en-GB", {
   day: "2-digit",
@@ -27,10 +29,10 @@ const dateTimeFormatter = new Intl.DateTimeFormat("en-GB", {
 });
 
 const filters = [
-  { key: "pending", label: t.admin.payments.pending },
-  { key: "approved", label: t.admin.payments.approved },
-  { key: "rejected", label: t.admin.payments.rejected },
-  { key: "all", label: t.admin.payments.all },
+  { key: "pending", label: tEn.admin.payments.pending },
+  { key: "approved", label: tEn.admin.payments.approved },
+  { key: "rejected", label: tEn.admin.payments.rejected },
+  { key: "all", label: tEn.admin.payments.all },
 ];
 
 export default async function AdminPaymentsPage({
@@ -38,6 +40,8 @@ export default async function AdminPaymentsPage({
 }: {
   searchParams: Promise<{ status?: string }>;
 }) {
+  // The dictionary is fetched here, not at module level: it is per person.
+  const t = await getDictionary();
   const { status } = await searchParams;
   const active = filters.some((filter) => filter.key === status) ? (status as string) : "pending";
 

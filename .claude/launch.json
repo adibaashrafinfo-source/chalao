@@ -4,8 +4,22 @@
     {
       "name": "web",
       "runtimeExecutable": "pnpm",
-      "runtimeArgs": ["dev"],
+      "runtimeArgs": [
+        "dev"
+      ],
       "port": 3000
+    },
+    {
+      "name": "mrbag",
+      "runtimeExecutable": "node",
+      "runtimeArgs": [
+        "D:/Project File/MR Bag/node_modules/next/dist/bin/next",
+        "dev",
+        "D:/Project File/MR Bag",
+        "--port",
+        "3100"
+      ],
+      "port": 3100
     }
   ]
 }

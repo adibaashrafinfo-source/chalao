@@ -5,6 +5,7 @@ import { redirect } from "next/navigation";
 import { z } from "zod";
 
 import { getMessages } from "@/lib/i18n";
+import { recordAudit } from "@/lib/audit";
 import { createClient } from "@/lib/supabase/server";
 import { getMembership } from "@/lib/supabase/queries";
 
@@ -52,6 +53,8 @@ export async function createInvitationAction(values: unknown): Promise<ActionRes
     return { error: error.message };
   }
 
+  await recordAudit("invite.create", "invitation", null, { email: parsed.data.email, role: parsed.data.role });
+
   revalidatePath("/settings/team");
   return { token: data.token as string };
 }
@@ -88,6 +91,8 @@ export async function changeRoleAction(memberId: string, role: string): Promise<
 
   if (error) return { error: error.message };
 
+  await recordAudit("member.role", "member", memberId, { role });
+
   revalidatePath("/settings/team");
   return {};
 }
@@ -104,6 +109,8 @@ export async function removeMemberAction(memberId: string): Promise<ActionResult
     .eq("organization_id", organizationId);
 
   if (error) return { error: error.message };
+
+  await recordAudit("member.remove", "member", memberId);
 
   revalidatePath("/settings/team");
   return {};

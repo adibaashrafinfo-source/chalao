@@ -11,15 +11,17 @@ import { MessageThread, type ThreadMessage } from "@/components/inbox/message-th
 import { Button } from "@/components/ui/button";
 import { getUserInitials } from "@/lib/dashboard/user";
 import { getMessages } from "@/lib/i18n";
+import { getDictionary } from "@/lib/i18n/locale";
 import { getCustomerRisk } from "@/lib/risk/queries";
 import { createClient } from "@/lib/supabase/server";
 import { getMembership } from "@/lib/supabase/queries";
 import { getCurrentUser } from "@/lib/supabase/user";
 import { cn } from "@/lib/utils";
 
-const t = getMessages("en");
+// Page titles are read once per server, so they stay in English.
+const tEn = getMessages("en");
 
-export const metadata: Metadata = { title: t.inbox.title };
+export const metadata: Metadata = { title: tEn.inbox.title };
 
 const STATUS_FILTERS = ["open", "pending", "closed"] as const;
 
@@ -43,6 +45,8 @@ export default async function InboxPage({
 }: {
   searchParams: Promise<{ c?: string; status?: string; q?: string }>;
 }) {
+  // The dictionary is fetched here, not at module level: it is per person.
+  const t = await getDictionary();
   const { c: selectedId, status, q } = await searchParams;
   const membership = await getMembership();
   const organizationId = membership?.organizationId ?? "";

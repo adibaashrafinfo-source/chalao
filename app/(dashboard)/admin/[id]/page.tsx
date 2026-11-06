@@ -15,12 +15,14 @@ import {
 import { getUserInitials } from "@/lib/dashboard/user";
 import { formatBDT, formatCount } from "@/lib/format";
 import { getMessages } from "@/lib/i18n";
+import { getDictionary } from "@/lib/i18n/locale";
 import { isPlatformAdmin } from "@/lib/site-settings";
 import { createClient } from "@/lib/supabase/server";
 
-const t = getMessages("en");
+// Page titles are read once per server, so they stay in English.
+const tEn = getMessages("en");
 
-export const metadata: Metadata = { title: t.admin.title };
+export const metadata: Metadata = { title: tEn.admin.title };
 
 const dateFormatter = new Intl.DateTimeFormat("en-GB", { day: "2-digit", month: "short", year: "numeric" });
 const dateTimeFormatter = new Intl.DateTimeFormat("en-GB", {
@@ -32,6 +34,8 @@ const dateTimeFormatter = new Intl.DateTimeFormat("en-GB", {
 });
 
 export default async function AdminOrganizationPage({ params }: { params: Promise<{ id: string }> }) {
+  // The dictionary is fetched here, not at module level: it is per person.
+  const t = await getDictionary();
   const { id } = await params;
   const initials = await getUserInitials();
 

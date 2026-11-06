@@ -9,13 +9,15 @@ import { paymentNumber } from "@/lib/billing";
 import { getUserInitials } from "@/lib/dashboard/user";
 import { formatBDT, formatCount } from "@/lib/format";
 import { getMessages } from "@/lib/i18n";
+import { getDictionary } from "@/lib/i18n/locale";
 import { createClient } from "@/lib/supabase/server";
 import { getMembership } from "@/lib/supabase/queries";
 import { cn } from "@/lib/utils";
 
-const t = getMessages("en");
+// Page titles are read once per server, so they stay in English.
+const tEn = getMessages("en");
 
-export const metadata: Metadata = { title: t.billing.title };
+export const metadata: Metadata = { title: tEn.billing.title };
 
 type Overview = {
   plan_code: string;
@@ -52,6 +54,8 @@ function addDays(date: Date, days: number): Date {
 }
 
 export default async function BillingPage() {
+  // The dictionary is fetched here, not at module level: it is per person.
+  const t = await getDictionary();
   const membership = await getMembership();
   if (!membership) redirect("/onboarding");
 

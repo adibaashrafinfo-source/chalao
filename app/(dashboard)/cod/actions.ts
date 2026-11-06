@@ -6,6 +6,7 @@ import { z } from "zod";
 
 import { getMessages } from "@/lib/i18n";
 import { requirePermission } from "@/lib/permissions-server";
+import { recordAudit } from "@/lib/audit";
 import { createClient } from "@/lib/supabase/server";
 import { getMembership } from "@/lib/supabase/queries";
 
@@ -72,6 +73,12 @@ export async function recordPayoutAction(values: unknown): Promise<ActionResult>
 
   if (error) return { error: error.message };
 
+  await recordAudit("payout.record", "payout", null, {
+    amount: input.amountReceived,
+    parcels: input.lines.length,
+    reference: input.reference,
+  });
+
   revalidatePath("/cod");
   return {};
 }
@@ -93,6 +100,8 @@ export async function deletePayoutAction(payoutId: string): Promise<ActionResult
     .eq("organization_id", organizationId);
 
   if (error) return { error: error.message };
+
+  await recordAudit("payout.delete", "payout", payoutId);
 
   revalidatePath("/cod");
   return {};

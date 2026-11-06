@@ -6,6 +6,7 @@ import { redirect } from "next/navigation";
 import { getMessages } from "@/lib/i18n";
 import { normalizeBdPhone } from "@/lib/phone";
 import { requirePermission } from "@/lib/permissions-server";
+import { recordAudit } from "@/lib/audit";
 import { createClient } from "@/lib/supabase/server";
 import { getMembership } from "@/lib/supabase/queries";
 import { customerSchema } from "@/lib/validations/customer";
@@ -86,6 +87,8 @@ export async function deleteCustomerAction(customerId: string): Promise<ActionRe
 
   // 23503 = orders still reference this customer.
   if (error) return { error: error.code === "23503" ? t.customers.errors.hasOrders : error.message };
+
+  await recordAudit("customer.delete", "customer", customerId);
 
   revalidatePath("/customers");
   redirect("/customers");

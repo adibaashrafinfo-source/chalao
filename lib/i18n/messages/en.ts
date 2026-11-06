@@ -234,6 +234,7 @@ export const en = {
       channels: "Channels",
       orderRules: "Order rules",
       team: "Team",
+      audit: "Activity",
       settings: "Settings",
       admin: "Platform admin",
       billing: "Billing",
@@ -704,6 +705,12 @@ export const en = {
   },
 
   settings: {
+    language: {
+      title: "Language",
+      hint: "Your own choice. Everyone else keeps reading in theirs.",
+      en: "English",
+      bn: "বাংলা",
+    },
     organization: {
       title: "Organization",
       subtitle: "Your business name and type",
@@ -946,6 +953,29 @@ export const en = {
       already: "This order's return is already recorded.",
       generic: "Something went wrong. Try again.",
     },
+  },
+
+  audit: {
+    title: "Activity",
+    subtitle: "Who changed what, and when",
+    empty: "Nothing recorded yet.",
+    ownerOnly: "Only the owner can read the activity log.",
+    who: "Who",
+    what: "What",
+    when: "When",
+    actions: {
+      "product.delete": "Deleted a product",
+      "variant.delete": "Deleted a product variant",
+      "customer.delete": "Deleted a customer",
+      "payout.record": "Recorded a courier payout",
+      "payout.delete": "Removed a courier payout",
+      "invite.create": "Invited someone to the team",
+      "member.role": "Changed a role",
+      "member.remove": "Removed someone from the team",
+      "rules.update": "Changed the order rules",
+      "courier.delete": "Removed a courier connection",
+    },
+    note: "Stock moves, order statuses and payments have their own histories on the pages they belong to. This log is for the quieter changes.",
   },
 
   roles: {
@@ -1407,6 +1437,14 @@ export const en = {
     detailSubtitle: "Order details, items and status",
     backToList: "Back to orders",
     fromConversation: "Open the conversation this came from",
+    bulk: {
+      selected: "{count} order|orders selected",
+      selectAll: "Select all",
+      clear: "Clear",
+      moved: "{count} order|orders moved",
+      skipped: "{count} could not move",
+    },
+    export: "Export CSV",
     whatsapp: {
       send: "WhatsApp",
       // Written to the customer, so it is in their language rather than the
@@ -1515,6 +1553,7 @@ export const en = {
     errors: {
       invalid: "Please check the order details.",
       notFound: "Order not found.",
+      tooMany: "Too many orders at once. Select up to 100.",
       customerRequired: "Pick a customer or fill in the new customer details.",
       customerNotFound: "Customer not found.",
       productNotFound: "One of the products is no longer available.",

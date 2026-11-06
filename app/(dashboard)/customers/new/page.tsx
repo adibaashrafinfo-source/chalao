@@ -6,12 +6,16 @@ import { CustomerForm } from "@/components/customers/customer-form";
 import { Topbar } from "@/components/dashboard/topbar";
 import { getUserInitials } from "@/lib/dashboard/user";
 import { getMessages } from "@/lib/i18n";
+import { getDictionary } from "@/lib/i18n/locale";
 
-const t = getMessages("en");
+// Page titles are read once per server, so they stay in English.
+const tEn = getMessages("en");
 
-export const metadata: Metadata = { title: t.customers.newTitle };
+export const metadata: Metadata = { title: tEn.customers.newTitle };
 
 export default async function NewCustomerPage() {
+  // The dictionary is fetched here, not at module level: it is per person.
+  const t = await getDictionary();
   const initials = await getUserInitials();
 
   return (

@@ -8,12 +8,14 @@ import { Button } from "@/components/ui/button";
 import { getUserInitials } from "@/lib/dashboard/user";
 import { formatBDT, formatCount } from "@/lib/format";
 import { getMessages } from "@/lib/i18n";
+import { getDictionary } from "@/lib/i18n/locale";
 import { createClient } from "@/lib/supabase/server";
 import { getMembership } from "@/lib/supabase/queries";
 
-const t = getMessages("en");
+// Page titles are read once per server, so they stay in English.
+const tEn = getMessages("en");
 
-export const metadata: Metadata = { title: t.products.listTitle };
+export const metadata: Metadata = { title: tEn.products.listTitle };
 
 type VariantRow = { stock: number; selling_price: number; is_active: boolean };
 type ProductRow = {
@@ -35,6 +37,8 @@ function priceRange(variants: VariantRow[]): string {
 }
 
 export default async function ProductsPage() {
+  // The dictionary is fetched here, not at module level: it is per person.
+  const t = await getDictionary();
   const membership = await getMembership();
   const supabase = await createClient();
   const initials = await getUserInitials();

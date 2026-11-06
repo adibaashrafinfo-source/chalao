@@ -9,15 +9,19 @@ import { ProductForm } from "@/components/products/product-form";
 import { VariantsEditor, type VariantRow } from "@/components/products/variants-editor";
 import { getUserInitials } from "@/lib/dashboard/user";
 import { getMessages } from "@/lib/i18n";
+import { getDictionary } from "@/lib/i18n/locale";
 import { can } from "@/lib/permissions";
 import { createClient } from "@/lib/supabase/server";
 import { getMembership } from "@/lib/supabase/queries";
 
-const t = getMessages("en");
+// Page titles are read once per server, so they stay in English.
+const tEn = getMessages("en");
 
-export const metadata: Metadata = { title: t.products.listTitle };
+export const metadata: Metadata = { title: tEn.products.listTitle };
 
 export default async function ProductDetailPage({ params }: { params: Promise<{ id: string }> }) {
+  // The dictionary is fetched here, not at module level: it is per person.
+  const t = await getDictionary();
   const { id } = await params;
   const membership = await getMembership();
   const supabase = await createClient();

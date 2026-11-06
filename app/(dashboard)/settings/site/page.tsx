@@ -5,13 +5,17 @@ import { Topbar } from "@/components/dashboard/topbar";
 import { SiteSettingsForm } from "@/components/settings/site-settings-form";
 import { getUserInitials } from "@/lib/dashboard/user";
 import { getMessages } from "@/lib/i18n";
+import { getDictionary } from "@/lib/i18n/locale";
 import { getSiteSettings, isPlatformAdmin } from "@/lib/site-settings";
 
-const t = getMessages("en");
+// Page titles are read once per server, so they stay in English.
+const tEn = getMessages("en");
 
-export const metadata: Metadata = { title: t.settings.site.title };
+export const metadata: Metadata = { title: tEn.settings.site.title };
 
 export default async function SiteSettingsPage() {
+  // The dictionary is fetched here, not at module level: it is per person.
+  const t = await getDictionary();
   const initials = await getUserInitials();
   const [admin, settings] = await Promise.all([isPlatformAdmin(), getSiteSettings()]);
 

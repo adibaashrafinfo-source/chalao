@@ -9,13 +9,15 @@ import { StockFilters } from "@/components/inventory/stock-filters";
 import { Badge } from "@/components/ui/badge";
 import { getUserInitials } from "@/lib/dashboard/user";
 import { formatBDT, formatCount } from "@/lib/format";
-import { getMessages } from "@/lib/i18n";
+import { getMessages, type Messages } from "@/lib/i18n";
+import { getDictionary } from "@/lib/i18n/locale";
 import { createClient } from "@/lib/supabase/server";
 import { getMembership } from "@/lib/supabase/queries";
 
-const t = getMessages("en");
+// Page titles are read once per server, so they stay in English.
+const tEn = getMessages("en");
 
-export const metadata: Metadata = { title: t.inventory.title };
+export const metadata: Metadata = { title: tEn.inventory.title };
 
 const MOVEMENT_LIMIT = 200;
 
@@ -61,6 +63,8 @@ export default async function InventoryPage({
 }: {
   searchParams: Promise<{ tab?: string; q?: string; low?: string; type?: string; from?: string; to?: string }>;
 }) {
+  // The dictionary is fetched here, not at module level: it is per person.
+  const t = await getDictionary();
   const { tab, q, low, type, from, to } = await searchParams;
   const membership = await getMembership();
   const organizationId = membership?.organizationId ?? "";
@@ -82,9 +86,9 @@ export default async function InventoryPage({
         <InventoryTabs inventory={t.inventory} active={activeTab} />
 
         {activeTab === "levels" ? (
-          <StockLevels organizationId={organizationId} supabase={supabase} search={q} lowOnly={low === "1"} />
+          <StockLevels t={t} organizationId={organizationId} supabase={supabase} search={q} lowOnly={low === "1"} />
         ) : (
-          <MovementLog
+          <MovementLog t={t}
             organizationId={organizationId}
             supabase={supabase}
             types={(type ?? "").split(",").filter(Boolean)}
@@ -100,11 +104,13 @@ export default async function InventoryPage({
 type SupabaseClient = Awaited<ReturnType<typeof createClient>>;
 
 async function StockLevels({
+  t,
   organizationId,
   supabase,
   search,
   lowOnly,
 }: {
+  t: Messages;
   organizationId: string;
   supabase: SupabaseClient;
   search?: string;
@@ -216,12 +222,14 @@ async function StockLevels({
 }
 
 async function MovementLog({
+  t,
   organizationId,
   supabase,
   types,
   from,
   to,
 }: {
+  t: Messages;
   organizationId: string;
   supabase: SupabaseClient;
   types: string[];
