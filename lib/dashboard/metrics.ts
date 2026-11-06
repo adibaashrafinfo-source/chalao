@@ -1,7 +1,7 @@
 import "server-only";
 
 import type { Brief } from "@/components/dashboard/morning-brief";
-import { createClient } from "@/lib/supabase/server";
+import { createClient } from "@/lib/db/server";
 
 // All windows are computed in the server's local timezone, which for this product is
 // Bangladesh time. Timestamps are stored as timestamptz, so the comparison is exact.
@@ -47,7 +47,7 @@ function addDays(date: Date, days: number): Date {
 type OrderRow = { total: number; status: string; created_at: string; delivered_at: string | null };
 
 export async function getDashboardData(organizationId: string, range: Range) {
-  const supabase = await createClient();
+  const db = await createClient();
 
   const now = new Date();
   const todayStart = startOfDay(now);
@@ -56,13 +56,13 @@ export async function getDashboardData(organizationId: string, range: Range) {
   const windowStart = addDays(todayStart, -29);
 
   const [{ data: orderRows }, { data: pendingRows }] = await Promise.all([
-    supabase
+    db
       .from("orders")
       .select("total, status, created_at, delivered_at")
       .eq("organization_id", organizationId)
       .gte("created_at", windowStart.toISOString())
       .limit(5000),
-    supabase
+    db
       .from("orders")
       .select("id", { count: "exact", head: false })
       .eq("organization_id", organizationId)
@@ -74,7 +74,7 @@ export async function getDashboardData(organizationId: string, range: Range) {
 
   // Delivered counts read delivered_at, which the state machine stamps, so an order
   // delivered today still counts even if it was placed last week.
-  const { data: deliveredRows } = await supabase
+  const { data: deliveredRows } = await db
     .from("orders")
     .select("delivered_at")
     .eq("organization_id", organizationId)
@@ -168,20 +168,20 @@ type VariantAlertRow = {
 };
 
 export async function getAlerts(organizationId: string): Promise<AlertItem[]> {
-  const supabase = await createClient();
+  const db = await createClient();
   const now = Date.now();
   const dayAgo = new Date(now - 24 * 60 * 60 * 1000).toISOString();
   const twoDaysAgo = new Date(now - 48 * 60 * 60 * 1000).toISOString();
 
   const [{ data: variantRows }, { data: stuckOrders }, { data: shipmentRows }] = await Promise.all([
-    supabase
+    db
       .from("product_variants")
       .select("id, name, stock, products(id, name, low_stock_threshold)")
       .eq("organization_id", organizationId)
       .eq("is_active", true)
       .order("stock", { ascending: true })
       .limit(200),
-    supabase
+    db
       .from("orders")
       .select("id, order_number, created_at")
       .eq("organization_id", organizationId)
@@ -189,7 +189,7 @@ export async function getAlerts(organizationId: string): Promise<AlertItem[]> {
       .lt("created_at", dayAgo)
       .order("created_at", { ascending: true })
       .limit(20),
-    supabase
+    db
       .from("shipments")
       .select("id, order_id, consignment_id, status, last_event_at, created_at")
       .eq("organization_id", organizationId)
@@ -249,8 +249,8 @@ export async function getAlerts(organizationId: string): Promise<AlertItem[]> {
 
 /** The one-line version of the day, for the strip at the top of the dashboard. */
 export async function getMorningBrief(organizationId: string): Promise<Brief> {
-  const supabase = await createClient();
-  const { data } = await supabase.rpc("morning_brief", { p_organization_id: organizationId });
+  const db = await createClient();
+  const { data } = await db.rpc("morning_brief", { p_organization_id: organizationId });
 
   const row = (data ?? {}) as Record<string, number>;
   return {

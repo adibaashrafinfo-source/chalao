@@ -8,10 +8,10 @@ import { getCourierAdapter } from "@/lib/couriers/registry";
 import { CourierError } from "@/lib/couriers/types";
 import { getMessages } from "@/lib/i18n";
 import { normalizeBdPhone } from "@/lib/phone";
-import { createAdminClient, hasServiceRoleKey } from "@/lib/supabase/admin";
+import { createAdminClient, hasServiceRoleKey } from "@/lib/db/server";
 import { requirePermission } from "@/lib/permissions-server";
-import { createClient } from "@/lib/supabase/server";
-import { getMembership } from "@/lib/supabase/queries";
+import { createClient } from "@/lib/db/server";
+import { getMembership } from "@/lib/db/queries";
 
 const t = getMessages("en");
 
@@ -61,7 +61,7 @@ export async function connectCourierAction(values: unknown): Promise<ActionResul
   const allowed = await requirePermission("manage_couriers");
   if (allowed.error) return { error: allowed.error };
   const organizationId = allowed.organizationId;
-  const supabase = await createClient();
+  const db = await createClient();
   const adapter = getCourierAdapter(parsed.data.provider);
 
   // Test the credentials before storing them (Brief §6.7).
@@ -71,7 +71,7 @@ export async function connectCourierAction(values: unknown): Promise<ActionResul
     return { error: error instanceof CourierError ? error.message : t.couriers.errors.testFailed };
   }
 
-  const { data: account, error } = await supabase
+  const { data: account, error } = await db
     .from("courier_accounts")
     .insert({
       organization_id: organizationId,
@@ -87,13 +87,13 @@ export async function connectCourierAction(values: unknown): Promise<ActionResul
   }
 
   // Straight into Vault — the credentials never touch a normal column.
-  const { error: vaultError } = await supabase.rpc("set_courier_credentials", {
+  const { error: vaultError } = await db.rpc("set_courier_credentials", {
     p_account_id: account.id,
     p_credentials: parsed.data.credentials,
   });
 
   if (vaultError) {
-    await supabase.from("courier_accounts").delete().eq("id", account.id).eq("organization_id", organizationId);
+    await db.from("courier_accounts").delete().eq("id", account.id).eq("organization_id", organizationId);
     return { error: vaultError.message };
   }
 
@@ -103,9 +103,9 @@ export async function connectCourierAction(values: unknown): Promise<ActionResul
 
 export async function testCourierAction(courierAccountId: string): Promise<ActionResult> {
   const organizationId = await requireOrg();
-  const supabase = await createClient();
+  const db = await createClient();
 
-  const { data: account } = await supabase
+  const { data: account } = await db
     .from("courier_accounts")
     .select("id, provider")
     .eq("id", courierAccountId)
@@ -119,7 +119,7 @@ export async function testCourierAction(courierAccountId: string): Promise<Actio
     const credentials = await readCredentials(courierAccountId);
     const result = await adapter.testConnection(credentials);
 
-    await supabase
+    await db
       .from("courier_accounts")
       .update({ last_tested_at: new Date().toISOString() })
       .eq("id", courierAccountId)
@@ -136,9 +136,9 @@ export async function setCourierActiveAction(courierAccountId: string, isActive:
   const allowed = await requirePermission("manage_couriers");
   if (allowed.error) return { error: allowed.error };
   const organizationId = allowed.organizationId;
-  const supabase = await createClient();
+  const db = await createClient();
 
-  const { error } = await supabase
+  const { error } = await db
     .from("courier_accounts")
     .update({ is_active: isActive })
     .eq("id", courierAccountId)
@@ -154,9 +154,9 @@ export async function deleteCourierAction(courierAccountId: string): Promise<Act
   const allowed = await requirePermission("manage_couriers");
   if (allowed.error) return { error: allowed.error };
   const organizationId = allowed.organizationId;
-  const supabase = await createClient();
+  const db = await createClient();
 
-  const { error } = await supabase
+  const { error } = await db
     .from("courier_accounts")
     .delete()
     .eq("id", courierAccountId)
@@ -177,10 +177,10 @@ export async function bookShipmentAction(values: unknown): Promise<ActionResult>
   if (!parsed.success) return { error: parsed.error.issues[0]?.message ?? t.couriers.errors.invalid };
 
   const organizationId = await requireOrg();
-  const supabase = await createClient();
+  const db = await createClient();
   const input = parsed.data;
 
-  const { data: order } = await supabase
+  const { data: order } = await db
     .from("orders")
     .select("id, order_number, status")
     .eq("id", input.orderId)
@@ -190,7 +190,7 @@ export async function bookShipmentAction(values: unknown): Promise<ActionResult>
   if (!order) return { error: t.orders.errors.notFound };
   if (order.status !== "ready_to_ship") return { error: t.couriers.errors.notReady };
 
-  const { data: account } = await supabase
+  const { data: account } = await db
     .from("courier_accounts")
     .select("id, provider, is_active")
     .eq("id", input.courierAccountId)
@@ -217,7 +217,7 @@ export async function bookShipmentAction(values: unknown): Promise<ActionResult>
     return { error: error instanceof CourierError ? error.message : t.couriers.errors.bookingFailed };
   }
 
-  const { data: shipment, error: shipmentError } = await supabase
+  const { data: shipment, error: shipmentError } = await db
     .from("shipments")
     .insert({
       organization_id: organizationId,
@@ -239,7 +239,7 @@ export async function bookShipmentAction(values: unknown): Promise<ActionResult>
 
   if (shipmentError) return { error: shipmentError.message };
 
-  const { error: statusError } = await supabase.rpc("transition_order_status", {
+  const { error: statusError } = await db.rpc("transition_order_status", {
     p_order_id: input.orderId,
     p_new_status: "shipped",
     p_note: `Booked with ${account.provider} · ${booking.consignmentId}`,
@@ -250,7 +250,7 @@ export async function bookShipmentAction(values: unknown): Promise<ActionResult>
     return { error: `${t.couriers.errors.bookedButStatus} (${statusError.message})` };
   }
 
-  await supabase.from("shipment_events").insert({
+  await db.from("shipment_events").insert({
     organization_id: organizationId,
     shipment_id: shipment.id,
     provider_status: "booked",

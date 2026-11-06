@@ -6,8 +6,8 @@ import { Topbar } from "@/components/dashboard/topbar";
 import { getUserInitials } from "@/lib/dashboard/user";
 import { getMessages } from "@/lib/i18n";
 import { getDictionary } from "@/lib/i18n/locale";
-import { createClient } from "@/lib/supabase/server";
-import { getMembership } from "@/lib/supabase/queries";
+import { createClient } from "@/lib/db/server";
+import { getMembership } from "@/lib/db/queries";
 
 // Page titles are read once per server, so they stay in English.
 const tEn = getMessages("en");
@@ -54,8 +54,8 @@ export default async function AuditPage() {
     );
   }
 
-  const supabase = await createClient();
-  const { data } = await supabase.rpc("audit_trail", {
+  const db = await createClient();
+  const { data } = await db.rpc("audit_trail", {
     p_organization_id: membership.organizationId,
     p_limit: 200,
   });

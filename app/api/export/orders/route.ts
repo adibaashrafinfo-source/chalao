@@ -1,8 +1,8 @@
 import { NextResponse, type NextRequest } from "next/server";
 
 import { formatPhone, normalizeBdPhone } from "@/lib/phone";
-import { createClient } from "@/lib/supabase/server";
-import { getMembership } from "@/lib/supabase/queries";
+import { createClient } from "@/lib/db/server";
+import { getMembership } from "@/lib/db/queries";
 
 // The orders a seller is looking at, as a file their accountant can open.
 // The same filters as the screen, so what downloads is what they can see.
@@ -22,9 +22,9 @@ export async function GET(request: NextRequest) {
   if (!membership) return NextResponse.json({ error: "Not signed in" }, { status: 401 });
 
   const params = request.nextUrl.searchParams;
-  const supabase = await createClient();
+  const db = await createClient();
 
-  let query = supabase
+  let query = db
     .from("orders")
     .select(
       "order_number, status, source, subtotal, discount, delivery_charge, total, district, delivery_address, created_at, delivered_at, customers(name, phone)",

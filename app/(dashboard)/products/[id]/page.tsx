@@ -11,8 +11,8 @@ import { getUserInitials } from "@/lib/dashboard/user";
 import { getMessages } from "@/lib/i18n";
 import { getDictionary } from "@/lib/i18n/locale";
 import { can } from "@/lib/permissions";
-import { createClient } from "@/lib/supabase/server";
-import { getMembership } from "@/lib/supabase/queries";
+import { createClient } from "@/lib/db/server";
+import { getMembership } from "@/lib/db/queries";
 
 // Page titles are read once per server, so they stay in English.
 const tEn = getMessages("en");
@@ -24,10 +24,10 @@ export default async function ProductDetailPage({ params }: { params: Promise<{ 
   const t = await getDictionary();
   const { id } = await params;
   const membership = await getMembership();
-  const supabase = await createClient();
+  const db = await createClient();
   const initials = await getUserInitials();
 
-  const { data: product } = await supabase
+  const { data: product } = await db
     .from("products")
     .select("id, name, sku, category, description, low_stock_threshold, is_active")
     .eq("id", id)
@@ -36,7 +36,7 @@ export default async function ProductDetailPage({ params }: { params: Promise<{ 
 
   if (!product) notFound();
 
-  const { data: variantRows } = await supabase
+  const { data: variantRows } = await db
     .from("product_variants")
     .select("id, name, sku, stock, cost_price, selling_price")
     .eq("product_id", id)

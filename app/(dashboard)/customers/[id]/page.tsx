@@ -15,8 +15,8 @@ import { getDictionary } from "@/lib/i18n/locale";
 import { can } from "@/lib/permissions";
 import { orderSourceLabel, orderStatusLabel, orderStatusTone } from "@/lib/orders/status";
 import { getCustomerRisk } from "@/lib/risk/queries";
-import { createClient } from "@/lib/supabase/server";
-import { getMembership } from "@/lib/supabase/queries";
+import { createClient } from "@/lib/db/server";
+import { getMembership } from "@/lib/db/queries";
 
 // Page titles are read once per server, so they stay in English.
 const tEn = getMessages("en");
@@ -39,11 +39,11 @@ export default async function CustomerProfilePage({ params }: { params: Promise<
   const t = await getDictionary();
   const { id } = await params;
   const membership = await getMembership();
-  const supabase = await createClient();
+  const db = await createClient();
   const initials = await getUserInitials();
   const organizationId = membership?.organizationId ?? "";
 
-  const { data: customer } = await supabase
+  const { data: customer } = await db
     .from("customers")
     .select("id, name, phone, alt_phone, email, address, district, notes")
     .eq("id", id)
@@ -52,7 +52,7 @@ export default async function CustomerProfilePage({ params }: { params: Promise<
 
   if (!customer) notFound();
 
-  const { data: orderRows } = await supabase
+  const { data: orderRows } = await db
     .from("orders")
     .select("id, order_number, total, status, source, created_at")
     .eq("customer_id", id)

@@ -6,8 +6,8 @@ import { z } from "zod";
 
 import { getMessages } from "@/lib/i18n";
 import { recordAudit } from "@/lib/audit";
-import { createClient } from "@/lib/supabase/server";
-import { getMembership } from "@/lib/supabase/queries";
+import { createClient } from "@/lib/db/server";
+import { getMembership } from "@/lib/db/queries";
 
 const t = getMessages("en");
 
@@ -41,10 +41,10 @@ export async function saveConfirmationRulesAction(values: unknown): Promise<Acti
   // The database enforces this too; saying it here gives a readable message.
   if (membership.role !== "owner") return { error: t.confirmation.errors.notOwner };
 
-  const supabase = await createClient();
+  const db = await createClient();
   const input = parsed.data;
 
-  const { error } = await supabase.from("order_confirmation_rules").upsert(
+  const { error } = await db.from("order_confirmation_rules").upsert(
     {
       organization_id: membership.organizationId,
       auto_confirm_enabled: input.autoConfirmEnabled,

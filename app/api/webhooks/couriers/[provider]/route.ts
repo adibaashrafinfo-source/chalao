@@ -2,7 +2,7 @@ import { timingSafeEqual } from "node:crypto";
 import { NextResponse, type NextRequest } from "next/server";
 
 import { getCourierAdapter } from "@/lib/couriers/registry";
-import { createAdminClient, hasServiceRoleKey } from "@/lib/supabase/admin";
+import { createAdminClient, hasServiceRoleKey } from "@/lib/db/server";
 
 // Courier status callbacks. No user session here, so the request authenticates itself
 // with the per-account webhook token and everything runs with the service role.

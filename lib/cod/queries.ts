@@ -1,11 +1,11 @@
 import "server-only";
 
 import type { CodSummary, Payout, PayoutItem, UnsettledShipment } from "@/lib/cod/types";
-import { createClient } from "@/lib/supabase/server";
+import { createClient } from "@/lib/db/server";
 
 export async function getCodSummary(organizationId: string): Promise<CodSummary> {
-  const supabase = await createClient();
-  const { data } = await supabase.rpc("cod_summary", { p_organization_id: organizationId });
+  const db = await createClient();
+  const { data } = await db.rpc("cod_summary", { p_organization_id: organizationId });
 
   const row = (data ?? {}) as Record<string, number>;
   return {
@@ -19,8 +19,8 @@ export async function getCodSummary(organizationId: string): Promise<CodSummary>
 
 /** Delivered parcels the courier has not paid for yet, oldest first. */
 export async function listUnsettledShipments(organizationId: string): Promise<UnsettledShipment[]> {
-  const supabase = await createClient();
-  const { data } = await supabase
+  const db = await createClient();
+  const { data } = await db
     .from("cod_unsettled_shipments")
     .select(
       "shipment_id, order_id, order_number, provider, courier_account_id, consignment_id, cod_amount, recipient_name, district, last_event_at",
@@ -63,9 +63,9 @@ function one<T>(value: T | T[] | null): T | null {
 }
 
 export async function listPayouts(organizationId: string): Promise<Payout[]> {
-  const supabase = await createClient();
+  const db = await createClient();
 
-  const { data } = await supabase
+  const { data } = await db
     .from("courier_payouts")
     .select(
       `id, provider, reference, paid_on, amount_received, method, note,

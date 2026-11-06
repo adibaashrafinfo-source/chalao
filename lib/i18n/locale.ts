@@ -3,8 +3,8 @@ import "server-only";
 import { cache } from "react";
 
 import { getMessages, type Locale, type Messages } from "@/lib/i18n";
-import { createClient } from "@/lib/supabase/server";
-import { getCurrentUser } from "@/lib/supabase/user";
+import { createClient } from "@/lib/db/server";
+import { getCurrentUser } from "@/lib/auth/session";
 
 /**
  * The signed-in person's own language.
@@ -23,8 +23,8 @@ export const getDictionary = cache(async function getDictionary(): Promise<Messa
   const user = await getCurrentUser();
   if (!user) return getMessages("en");
 
-  const supabase = await createClient();
-  const { data } = await supabase.from("profiles").select("language").eq("id", user.id).maybeSingle();
+  const db = await createClient();
+  const { data } = await db.from("profiles").select("language").eq("id", user.id).maybeSingle();
 
   return getMessages(((data?.language as Locale) ?? "en") === "bn" ? "bn" : "en");
 });
@@ -34,8 +34,8 @@ export async function getLocale(): Promise<Locale> {
   const user = await getCurrentUser();
   if (!user) return "en";
 
-  const supabase = await createClient();
-  const { data } = await supabase.from("profiles").select("language").eq("id", user.id).maybeSingle();
+  const db = await createClient();
+  const { data } = await db.from("profiles").select("language").eq("id", user.id).maybeSingle();
 
   return (data?.language as Locale) === "bn" ? "bn" : "en";
 }

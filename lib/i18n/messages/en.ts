@@ -1368,7 +1368,7 @@ export const en = {
       hasShipments: "This connection has shipments, so it can't be removed. Deactivate it instead.",
       noCredentials: "No stored credentials for this connection.",
       noServiceKey:
-        "SUPABASE_SERVICE_ROLE_KEY is missing, so stored courier credentials can't be read. Add it to .env.local.",
+        "AUTH_SECRET is missing, so stored courier credentials can't be read. Set it in the app's environment.",
       notReady: "Only an order that is ready to ship can be booked.",
       bookingFailed: "The courier rejected the booking.",
       bookedButStatus: "The parcel was booked, but the order status could not be updated.",

@@ -6,8 +6,8 @@ import { AcceptInvitation } from "@/components/auth/accept-invitation";
 import { FormNotice } from "@/components/auth/login-form";
 import { Button } from "@/components/ui/button";
 import { getMessages } from "@/lib/i18n";
-import { createClient } from "@/lib/supabase/server";
-import { getCurrentUser } from "@/lib/supabase/user";
+import { createClient } from "@/lib/db/server";
+import { getCurrentUser } from "@/lib/auth/session";
 
 const t = getMessages("en");
 
@@ -23,10 +23,10 @@ type Preview = {
 
 export default async function InvitePage({ params }: { params: Promise<{ token: string }> }) {
   const { token } = await params;
-  const supabase = await createClient();
+  const db = await createClient();
 
   const [{ data }, user] = await Promise.all([
-    supabase.rpc("invitation_preview", { p_token: token }),
+    db.rpc("invitation_preview", { p_token: token }),
     getCurrentUser(),
   ]);
 

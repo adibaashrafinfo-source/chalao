@@ -5,9 +5,9 @@ import { redirect } from "next/navigation";
 import { z } from "zod";
 
 import { SITE_SETTINGS_TAG } from "@/lib/site-settings";
-import { createClient } from "@/lib/supabase/server";
-import { getMembership } from "@/lib/supabase/queries";
-import { getCurrentUser } from "@/lib/supabase/user";
+import { createClient } from "@/lib/db/server";
+import { getMembership } from "@/lib/db/queries";
+import { getCurrentUser } from "@/lib/auth/session";
 import { businessTypeValues } from "@/lib/validations/onboarding";
 
 export type ActionResult = { error?: string };
@@ -56,8 +56,8 @@ export async function updateOrganizationAction(values: unknown): Promise<ActionR
   const membership = await getMembership();
   if (!membership) redirect("/onboarding");
 
-  const supabase = await createClient();
-  const { error } = await supabase
+  const db = await createClient();
+  const { error } = await db
     .from("organizations")
     .update({
       name: parsed.data.name,
@@ -79,8 +79,8 @@ export async function updateSiteSettingsAction(values: unknown): Promise<ActionR
   const parsed = siteSchema.safeParse(values);
   if (!parsed.success) return { error: parsed.error.issues[0]?.message ?? "Invalid details" };
 
-  const supabase = await createClient();
-  const { error } = await supabase
+  const db = await createClient();
+  const { error } = await db
     .from("site_settings")
     .update({
       facebook_url: parsed.data.facebook,
@@ -100,28 +100,6 @@ export async function updateSiteSettingsAction(values: unknown): Promise<ActionR
   return {};
 }
 
-/**
- * Stores the address of a logo the browser has just uploaded. The file itself
- * went straight to Storage, where the policy checked that this person belongs
- * to the organization whose folder it landed in.
- */
-export async function saveLogoAction(logoUrl: string | null): Promise<ActionResult> {
-  const membership = await getMembership();
-  if (!membership) redirect("/onboarding");
-  if (membership.role !== "owner") return { error: "Only the owner can change these details." };
-
-  const supabase = await createClient();
-  const { error } = await supabase
-    .from("organizations")
-    .update({ logo_url: logoUrl })
-    .eq("id", membership.organizationId);
-
-  if (error) return { error: error.message };
-
-  revalidatePath("/settings/organization");
-  return {};
-}
-
 /** The language this person reads the dashboard in. Their own choice, not the business's. */
 export async function setLanguageAction(language: string): Promise<ActionResult> {
   if (language !== "en" && language !== "bn") return { error: "Unknown language" };
@@ -129,8 +107,8 @@ export async function setLanguageAction(language: string): Promise<ActionResult>
   const user = await getCurrentUser();
   if (!user) redirect("/login");
 
-  const supabase = await createClient();
-  const { error } = await supabase.from("profiles").update({ language }).eq("id", user.id);
+  const db = await createClient();
+  const { error } = await db.from("profiles").update({ language }).eq("id", user.id);
 
   if (error) return { error: error.message };
 

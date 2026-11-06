@@ -1,6 +1,6 @@
 import "server-only";
 
-import { getCurrentUser } from "@/lib/supabase/user";
+import { getCurrentUser } from "@/lib/auth/session";
 
 /** Initials for the top-bar avatar, from the signed-in user's name or email. */
 export async function getUserInitials(): Promise<string> {

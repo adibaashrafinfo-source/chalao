@@ -9,8 +9,8 @@ import { getUserInitials } from "@/lib/dashboard/user";
 import { formatBDT, formatCount } from "@/lib/format";
 import { getMessages } from "@/lib/i18n";
 import { getDictionary } from "@/lib/i18n/locale";
-import { createClient } from "@/lib/supabase/server";
-import { getMembership } from "@/lib/supabase/queries";
+import { createClient } from "@/lib/db/server";
+import { getMembership } from "@/lib/db/queries";
 
 // Page titles are read once per server, so they stay in English.
 const tEn = getMessages("en");
@@ -40,11 +40,11 @@ export default async function ProductsPage() {
   // The dictionary is fetched here, not at module level: it is per person.
   const t = await getDictionary();
   const membership = await getMembership();
-  const supabase = await createClient();
+  const db = await createClient();
   const initials = await getUserInitials();
 
   // RLS already scopes this; the explicit filter is defence in depth (Brief §9).
-  const { data, error } = await supabase
+  const { data, error } = await db
     .from("products")
     .select("id, name, sku, category, is_active, low_stock_threshold, product_variants(stock, selling_price, is_active)")
     .eq("organization_id", membership?.organizationId ?? "")

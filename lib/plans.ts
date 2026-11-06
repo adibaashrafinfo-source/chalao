@@ -1,9 +1,9 @@
 import "server-only";
 
 import { unstable_cache } from "next/cache";
-import { createClient as createPublicClient } from "@supabase/supabase-js";
 
-import { getSupabaseEnv } from "@/lib/env";
+import { hasDatabaseConfig } from "@/lib/db/pool";
+import { createAdminClient } from "@/lib/db/server";
 
 export type PublicPlan = {
   code: string;
@@ -19,19 +19,16 @@ export type PublicPlan = {
 export const PLANS_TAG = "subscription-plans";
 
 /**
- * Plans for the public pricing section. Read with a plain anon client so the marketing
+ * Plans for the public pricing section. Read without a login so the marketing
  * pages stay static, and cached until an admin edits a price (revalidateTag).
  */
 export const getPublicPlans = unstable_cache(
   async function loadPublicPlans(): Promise<PublicPlan[]> {
-    const env = getSupabaseEnv();
-    if (!env) return [];
+    if (!hasDatabaseConfig()) return [];
 
-    const supabase = createPublicClient(env.url, env.anonKey, {
-      auth: { persistSession: false, autoRefreshToken: false },
-    });
+    const db = createAdminClient();
 
-    const { data, error } = await supabase
+    const { data, error } = await db
       .from("subscription_plans")
       .select("code, name, tagline, monthly_price, order_limit, user_limit, is_featured, sort_order")
       .eq("is_active", true)

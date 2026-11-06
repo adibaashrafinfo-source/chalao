@@ -1,6 +1,6 @@
 import "server-only";
 
-import { createClient } from "@/lib/supabase/server";
+import { createClient } from "@/lib/db/server";
 
 export type ProfitSummary = {
   /** Delivered orders only — an order still in a van has earned nothing. */
@@ -53,8 +53,8 @@ export async function getProfitSummary(
   from: string,
   to: string,
 ): Promise<ProfitSummary> {
-  const supabase = await createClient();
-  const { data } = await supabase.rpc("profit_summary", {
+  const db = await createClient();
+  const { data } = await db.rpc("profit_summary", {
     p_organization_id: organizationId,
     p_from: from,
     p_to: to,
@@ -80,8 +80,8 @@ export async function getProductProfit(
   from: string,
   to: string,
 ): Promise<ProductProfit[]> {
-  const supabase = await createClient();
-  const { data } = await supabase.rpc("product_profit", {
+  const db = await createClient();
+  const { data } = await db.rpc("product_profit", {
     p_organization_id: organizationId,
     p_from: from,
     p_to: to,

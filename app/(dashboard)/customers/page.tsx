@@ -10,8 +10,8 @@ import { formatBDT, formatCount } from "@/lib/format";
 import { getMessages } from "@/lib/i18n";
 import { getDictionary } from "@/lib/i18n/locale";
 import { formatPhone, normalizeBdPhone } from "@/lib/phone";
-import { createClient } from "@/lib/supabase/server";
-import { getMembership } from "@/lib/supabase/queries";
+import { createClient } from "@/lib/db/server";
+import { getMembership } from "@/lib/db/queries";
 
 // Page titles are read once per server, so they stay in English.
 const tEn = getMessages("en");
@@ -39,10 +39,10 @@ export default async function CustomersPage({
   const t = await getDictionary();
   const { q } = await searchParams;
   const membership = await getMembership();
-  const supabase = await createClient();
+  const db = await createClient();
   const initials = await getUserInitials();
 
-  let query = supabase
+  let query = db
     .from("customers")
     .select("id, name, phone, district, created_at, orders(total, status, created_at)")
     .eq("organization_id", membership?.organizationId ?? "")

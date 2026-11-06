@@ -6,8 +6,8 @@ import { z } from "zod";
 
 import { getMessages } from "@/lib/i18n";
 import { normalizeBdPhone } from "@/lib/phone";
-import { createClient } from "@/lib/supabase/server";
-import { getMembership } from "@/lib/supabase/queries";
+import { createClient } from "@/lib/db/server";
+import { getMembership } from "@/lib/db/queries";
 
 const t = getMessages("en");
 
@@ -33,8 +33,8 @@ export async function submitPaymentAction(values: unknown): Promise<ActionResult
   const membership = await getMembership();
   if (!membership) redirect("/onboarding");
 
-  const supabase = await createClient();
-  const { error } = await supabase.rpc("submit_payment", {
+  const db = await createClient();
+  const { error } = await db.rpc("submit_payment", {
     p_plan_code: parsed.data.planCode,
     p_months: parsed.data.months,
     p_amount: parsed.data.amount,

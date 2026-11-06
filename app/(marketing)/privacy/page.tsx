@@ -98,9 +98,8 @@ export default function PrivacyPolicyPage() {
             handling of that data is governed by Meta&apos;s privacy policy.
           </li>
           <li>
-            <strong>Infrastructure providers</strong> — Supabase (database and authentication) and Vercel
-            (application hosting). They store and process data so that we can run the service, under contract, and
-            for no purpose of their own.
+            <strong>Hosting provider</strong> — the company that hosts our servers and database. It stores and
+            processes data so that we can run the service, under contract, and for no purpose of their own.
           </li>
           <li>
             <strong>Authorities</strong> — only where the law requires it, and only what it requires.

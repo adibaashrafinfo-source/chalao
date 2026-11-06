@@ -1,11 +1,11 @@
 import "server-only";
 
 import type { ReturnRow, ReturnsSummary, ReturnReason } from "@/lib/returns/types";
-import { createClient } from "@/lib/supabase/server";
+import { createClient } from "@/lib/db/server";
 
 export async function getReturnsSummary(organizationId: string): Promise<ReturnsSummary> {
-  const supabase = await createClient();
-  const { data } = await supabase.rpc("returns_summary", { p_organization_id: organizationId });
+  const db = await createClient();
+  const { data } = await db.rpc("returns_summary", { p_organization_id: organizationId });
 
   const row = (data ?? {}) as Record<string, number>;
   return {
@@ -18,8 +18,8 @@ export async function getReturnsSummary(organizationId: string): Promise<Returns
 }
 
 export async function listReturns(organizationId: string): Promise<ReturnRow[]> {
-  const supabase = await createClient();
-  const { data } = await supabase
+  const db = await createClient();
+  const { data } = await db
     .from("order_returns")
     .select("id, order_id, reason, return_charge, restocked, note, created_at, orders(order_number, total, customers(name))")
     .eq("organization_id", organizationId)
@@ -52,7 +52,7 @@ export async function listReturns(organizationId: string): Promise<ReturnRow[]> 
 
 /** True when this order already has its return written down. */
 export async function hasReturnRecord(orderId: string): Promise<boolean> {
-  const supabase = await createClient();
-  const { data } = await supabase.from("order_returns").select("id").eq("order_id", orderId).maybeSingle();
+  const db = await createClient();
+  const { data } = await db.from("order_returns").select("id").eq("order_id", orderId).maybeSingle();
   return Boolean(data);
 }

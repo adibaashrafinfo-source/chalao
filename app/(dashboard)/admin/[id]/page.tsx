@@ -17,7 +17,7 @@ import { formatBDT, formatCount } from "@/lib/format";
 import { getMessages } from "@/lib/i18n";
 import { getDictionary } from "@/lib/i18n/locale";
 import { isPlatformAdmin } from "@/lib/site-settings";
-import { createClient } from "@/lib/supabase/server";
+import { createClient } from "@/lib/db/server";
 
 // Page titles are read once per server, so they stay in English.
 const tEn = getMessages("en");
@@ -44,11 +44,11 @@ export default async function AdminOrganizationPage({ params }: { params: Promis
   const organization = await getOrganizationDetail(id);
   if (!organization) notFound();
 
-  const supabase = await createClient();
+  const db = await createClient();
   const [payments, events, { data: planRows }] = await Promise.all([
     listOrganizationPayments(id),
     listOrganizationEvents(id),
-    supabase
+    db
       .from("subscription_plans")
       .select("code, name, monthly_price")
       .eq("is_active", true)

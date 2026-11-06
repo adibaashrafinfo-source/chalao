@@ -5,26 +5,22 @@ import { useRouter } from "next/navigation";
 import { useRef, useState } from "react";
 import { ImageUp, Trash2 } from "lucide-react";
 
-import { saveLogoAction } from "@/app/(dashboard)/settings/actions";
 import { FormNotice } from "@/components/auth/login-form";
 import { Button } from "@/components/ui/button";
 import type { Messages } from "@/lib/i18n";
-import { createClient } from "@/lib/supabase/client";
 
 const MAX_BYTES = 1_000_000;
 const ACCEPTED = ["image/png", "image/jpeg", "image/webp", "image/svg+xml"];
 
 /**
- * The logo goes to Supabase Storage straight from the browser, under a folder
- * named after the organization — the storage policy checks membership against
- * that folder, so a signed-in seller can only ever write inside their own.
+ * The logo is sent to this app's own server, which saves it in the upload folder and
+ * records its address. Only the owner can do this; the server checks that too.
  *
- * Always the same path, so replacing a logo leaves nothing behind. The URL
+ * Always the same path per business, so replacing a logo leaves nothing behind. The URL
  * carries a version so a replaced logo does not keep showing from the cache.
  */
 export function LogoUpload({
   copy,
-  organizationId,
   logoUrl,
   canEdit,
 }: {
@@ -51,42 +47,38 @@ export function LogoUpload({
     }
 
     setPending(true);
-    const supabase = createClient();
-    const path = `${organizationId}/logo`;
+    const body = new FormData();
+    body.append("file", file);
 
-    const { error: uploadError } = await supabase.storage
-      .from("business-logos")
-      .upload(path, file, { upsert: true, contentType: file.type });
-
-    if (uploadError) {
+    try {
+      const response = await fetch("/api/logo", { method: "POST", body });
+      const result = (await response.json().catch(() => ({}))) as { error?: string };
+      if (!response.ok) {
+        setError(result.error ?? copy.logoWrongType);
+        return;
+      }
+      router.refresh();
+    } catch {
+      setError("Could not upload the image. Check your connection and try again.");
+    } finally {
       setPending(false);
-      setError(uploadError.message);
-      return;
     }
-
-    const { data } = supabase.storage.from("business-logos").getPublicUrl(path);
-    const result = await saveLogoAction(`${data.publicUrl}?v=${Date.now()}`);
-
-    setPending(false);
-    if (result?.error) {
-      setError(result.error);
-      return;
-    }
-    router.refresh();
   };
 
   const remove = async () => {
     setPending(true);
     setError(null);
-    const supabase = createClient();
-    await supabase.storage.from("business-logos").remove([`${organizationId}/logo`]);
-    const result = await saveLogoAction(null);
-    setPending(false);
-    if (result?.error) {
-      setError(result.error);
-      return;
+    try {
+      const response = await fetch("/api/logo", { method: "DELETE" });
+      if (!response.ok) {
+        const result = (await response.json().catch(() => ({}))) as { error?: string };
+        setError(result.error ?? "Could not remove the logo.");
+        return;
+      }
+      router.refresh();
+    } finally {
+      setPending(false);
     }
-    router.refresh();
   };
 
   return (
@@ -99,8 +91,7 @@ export function LogoUpload({
       <div className="flex flex-wrap items-center gap-4">
         <div className="flex h-20 w-40 items-center justify-center rounded-lg bg-surface-alt p-2">
           {logoUrl ? (
-            // Unoptimised: the file lives in Supabase Storage, not in this app's
-            // own images, and it is already small.
+            // Unoptimised: the file is served from the upload folder and is already small.
             <Image
               src={logoUrl}
               alt={copy.logo}

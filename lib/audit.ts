@@ -1,6 +1,6 @@
 import "server-only";
 
-import { createClient } from "@/lib/supabase/server";
+import { createClient } from "@/lib/db/server";
 
 /**
  * Writes one line to the activity log.
@@ -19,8 +19,8 @@ export async function recordAudit(
   detail?: Record<string, unknown> | null,
 ): Promise<void> {
   try {
-    const supabase = await createClient();
-    await supabase.rpc("record_audit", {
+    const db = await createClient();
+    await db.rpc("record_audit", {
       p_action: action,
       p_entity: entity ?? null,
       p_entity_id: entityId ?? null,

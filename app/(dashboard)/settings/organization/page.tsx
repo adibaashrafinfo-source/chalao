@@ -11,8 +11,8 @@ import { getUserInitials } from "@/lib/dashboard/user";
 import { getMessages } from "@/lib/i18n";
 import { getDictionary, getLocale } from "@/lib/i18n/locale";
 import { isPlatformAdmin } from "@/lib/site-settings";
-import { createClient } from "@/lib/supabase/server";
-import { getMembership } from "@/lib/supabase/queries";
+import { createClient } from "@/lib/db/server";
+import { getMembership } from "@/lib/db/queries";
 import type { BusinessType } from "@/lib/validations/onboarding";
 
 // Page titles are read once per server, so they stay in English.
@@ -27,11 +27,11 @@ export default async function OrganizationSettingsPage() {
   const membership = await getMembership();
   if (!membership) redirect("/onboarding");
 
-  const supabase = await createClient();
+  const db = await createClient();
   const initials = await getUserInitials();
 
   const [{ data: organization }, admin] = await Promise.all([
-    supabase
+    db
       .from("organizations")
       .select("id, name, business_type, phone, address, logo_url")
       .eq("id", membership.organizationId)

@@ -7,7 +7,7 @@ import { getUserInitials } from "@/lib/dashboard/user";
 import { getMessages } from "@/lib/i18n";
 import { getDictionary } from "@/lib/i18n/locale";
 import { getConfirmationRules } from "@/lib/orders/confirmation";
-import { getMembership } from "@/lib/supabase/queries";
+import { getMembership } from "@/lib/db/queries";
 
 // Page titles are read once per server, so they stay in English.
 const tEn = getMessages("en");

@@ -21,3 +21,8 @@ supabase/.branches/
 .DS_Store
 *.log
 .vercel
+
+# build output and local test files
+dist/
+.scratch/
+uploads/

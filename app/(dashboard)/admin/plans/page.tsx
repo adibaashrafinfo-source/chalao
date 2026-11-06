@@ -10,7 +10,7 @@ import { getUserInitials } from "@/lib/dashboard/user";
 import { getMessages } from "@/lib/i18n";
 import { getDictionary } from "@/lib/i18n/locale";
 import { isPlatformAdmin } from "@/lib/site-settings";
-import { createClient } from "@/lib/supabase/server";
+import { createClient } from "@/lib/db/server";
 
 // Page titles are read once per server, so they stay in English.
 const tEn = getMessages("en");
@@ -23,9 +23,9 @@ export default async function AdminPlansPage() {
   const initials = await getUserInitials();
   if (!(await isPlatformAdmin())) notFound();
 
-  const supabase = await createClient();
+  const db = await createClient();
   const [{ data: planRows }, organizations, pending] = await Promise.all([
-    supabase
+    db
       .from("subscription_plans")
       .select("code, name, tagline, monthly_price, order_limit, user_limit, is_featured, is_active")
       .order("sort_order"),

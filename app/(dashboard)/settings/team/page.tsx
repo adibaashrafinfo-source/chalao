@@ -7,9 +7,10 @@ import { TeamManager } from "@/components/settings/team-manager";
 import { getUserInitials } from "@/lib/dashboard/user";
 import { getMessages } from "@/lib/i18n";
 import { getDictionary } from "@/lib/i18n/locale";
-import { getMembership } from "@/lib/supabase/queries";
-import { getCurrentUser } from "@/lib/supabase/user";
+import { getMembership } from "@/lib/db/queries";
+import { getCurrentUser } from "@/lib/auth/session";
 import { getTeam, getUserLimit, listOpenInvitations } from "@/lib/team/queries";
+import { siteUrl as getSiteUrl } from "@/lib/site-url";
 
 // Page titles are read once per server, so they stay in English.
 const tEn = getMessages("en");
@@ -42,7 +43,7 @@ export default async function TeamPage() {
       ? t.team.usageUnlimited.replace("{count}", String(members.length))
       : t.team.usage.replace("{count}", String(members.length)).replace("{limit}", String(limit));
 
-  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000";
+  const siteUrl = getSiteUrl();
 
   return (
     <>

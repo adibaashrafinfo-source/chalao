@@ -6,8 +6,8 @@ import { z } from "zod";
 
 import { getMessages } from "@/lib/i18n";
 import { returnReasons } from "@/lib/returns/types";
-import { createClient } from "@/lib/supabase/server";
-import { getMembership } from "@/lib/supabase/queries";
+import { createClient } from "@/lib/db/server";
+import { getMembership } from "@/lib/db/queries";
 
 const t = getMessages("en");
 
@@ -32,10 +32,10 @@ export async function recordReturnAction(values: unknown): Promise<ActionResult>
   const membership = await getMembership();
   if (!membership) redirect("/onboarding");
 
-  const supabase = await createClient();
+  const db = await createClient();
   const input = parsed.data;
 
-  const { error } = await supabase.rpc("record_order_return", {
+  const { error } = await db.rpc("record_order_return", {
     p_order_id: input.orderId,
     p_reason: input.reason,
     p_return_charge: input.returnCharge,

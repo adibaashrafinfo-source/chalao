@@ -1,6 +1,6 @@
 import "server-only";
 
-import { createClient } from "@/lib/supabase/server";
+import { createClient } from "@/lib/db/server";
 
 // Everything the admin panel reads goes through these SECURITY DEFINER functions,
 // which check is_platform_admin() in the database. They return who a seller is and
@@ -51,8 +51,8 @@ export type AdminSubmissionRow = {
 };
 
 export async function listOrganizations(search?: string): Promise<AdminOrganizationRow[]> {
-  const supabase = await createClient();
-  const { data, error } = await supabase.rpc("admin_list_organizations", {
+  const db = await createClient();
+  const { data, error } = await db.rpc("admin_list_organizations", {
     p_search: search?.trim() || null,
   });
 
@@ -61,8 +61,8 @@ export async function listOrganizations(search?: string): Promise<AdminOrganizat
 }
 
 export async function getOrganizationDetail(organizationId: string): Promise<AdminOrganizationDetail | null> {
-  const supabase = await createClient();
-  const { data, error } = await supabase.rpc("admin_organization_detail", {
+  const db = await createClient();
+  const { data, error } = await db.rpc("admin_organization_detail", {
     p_organization_id: organizationId,
   });
 
@@ -71,8 +71,8 @@ export async function getOrganizationDetail(organizationId: string): Promise<Adm
 }
 
 export async function listSubmissions(status?: string): Promise<AdminSubmissionRow[]> {
-  const supabase = await createClient();
-  const { data, error } = await supabase.rpc("admin_list_submissions", {
+  const db = await createClient();
+  const { data, error } = await db.rpc("admin_list_submissions", {
     p_status: status && status !== "all" ? status : null,
   });
 
@@ -82,8 +82,8 @@ export async function listSubmissions(status?: string): Promise<AdminSubmissionR
 
 /** Payments recorded for one organization, newest first. */
 export async function listOrganizationPayments(organizationId: string) {
-  const supabase = await createClient();
-  const { data } = await supabase
+  const db = await createClient();
+  const { data } = await db
     .from("subscription_payments")
     .select("id, plan_code, months, amount, method, transaction_id, period_start, period_end, created_at")
     .eq("organization_id", organizationId)
@@ -94,8 +94,8 @@ export async function listOrganizationPayments(organizationId: string) {
 }
 
 export async function listOrganizationEvents(organizationId: string) {
-  const supabase = await createClient();
-  const { data } = await supabase
+  const db = await createClient();
+  const { data } = await db
     .from("subscription_events")
     .select("id, event_type, detail, note, created_at")
     .eq("organization_id", organizationId)

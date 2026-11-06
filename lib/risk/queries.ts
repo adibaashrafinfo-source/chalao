@@ -1,7 +1,7 @@
 import "server-only";
 
 import type { CustomerRisk, RiskLevel } from "@/lib/risk/types";
-import { createClient } from "@/lib/supabase/server";
+import { createClient } from "@/lib/db/server";
 
 type RiskRow = {
   level: RiskLevel;
@@ -16,8 +16,8 @@ type RiskRow = {
 };
 
 export async function getCustomerRisk(customerId: string): Promise<CustomerRisk | null> {
-  const supabase = await createClient();
-  const { data, error } = await supabase.rpc("customer_risk", { p_customer_id: customerId });
+  const db = await createClient();
+  const { data, error } = await db.rpc("customer_risk", { p_customer_id: customerId });
 
   if (error || !data) return null;
 

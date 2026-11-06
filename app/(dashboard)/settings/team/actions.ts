@@ -6,8 +6,8 @@ import { z } from "zod";
 
 import { getMessages } from "@/lib/i18n";
 import { recordAudit } from "@/lib/audit";
-import { createClient } from "@/lib/supabase/server";
-import { getMembership } from "@/lib/supabase/queries";
+import { createClient } from "@/lib/db/server";
+import { getMembership } from "@/lib/db/queries";
 
 const t = getMessages("en");
 
@@ -34,14 +34,14 @@ export async function createInvitationAction(values: unknown): Promise<ActionRes
   const organizationId = await requireOwner();
   if (!organizationId) return { error: t.team.ownerOnly };
 
-  const supabase = await createClient();
+  const db = await createClient();
 
   // Inviting someone already on the team would only produce a link that fails.
-  const { data: team } = await supabase.rpc("organization_team", { p_organization_id: organizationId });
+  const { data: team } = await db.rpc("organization_team", { p_organization_id: organizationId });
   const emails = ((team ?? []) as { email: string }[]).map((member) => member.email.toLowerCase());
   if (emails.includes(parsed.data.email)) return { error: t.team.errors.alreadyMember };
 
-  const { data, error } = await supabase
+  const { data, error } = await db
     .from("organization_invitations")
     .insert({ organization_id: organizationId, email: parsed.data.email, role: parsed.data.role })
     .select("token")
@@ -63,8 +63,8 @@ export async function revokeInvitationAction(invitationId: string): Promise<Acti
   const organizationId = await requireOwner();
   if (!organizationId) return { error: t.team.ownerOnly };
 
-  const supabase = await createClient();
-  const { error } = await supabase
+  const db = await createClient();
+  const { error } = await db
     .from("organization_invitations")
     .update({ revoked_at: new Date().toISOString() })
     .eq("id", invitationId)
@@ -82,8 +82,8 @@ export async function changeRoleAction(memberId: string, role: string): Promise<
   const organizationId = await requireOwner();
   if (!organizationId) return { error: t.team.ownerOnly };
 
-  const supabase = await createClient();
-  const { error } = await supabase
+  const db = await createClient();
+  const { error } = await db
     .from("organization_members")
     .update({ role })
     .eq("id", memberId)
@@ -101,8 +101,8 @@ export async function removeMemberAction(memberId: string): Promise<ActionResult
   const organizationId = await requireOwner();
   if (!organizationId) return { error: t.team.ownerOnly };
 
-  const supabase = await createClient();
-  const { error } = await supabase
+  const db = await createClient();
+  const { error } = await db
     .from("organization_members")
     .delete()
     .eq("id", memberId)

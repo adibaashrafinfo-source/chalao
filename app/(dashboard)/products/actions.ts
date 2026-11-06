@@ -6,8 +6,8 @@ import { redirect } from "next/navigation";
 import { getMessages } from "@/lib/i18n";
 import { requirePermission } from "@/lib/permissions-server";
 import { recordAudit } from "@/lib/audit";
-import { createClient } from "@/lib/supabase/server";
-import { getMembership } from "@/lib/supabase/queries";
+import { createClient } from "@/lib/db/server";
+import { getMembership } from "@/lib/db/queries";
 import { productSchema, stockAdjustmentSchema, variantSchema } from "@/lib/validations/product";
 
 const t = getMessages("en");
@@ -31,9 +31,9 @@ export async function createProductAction(values: unknown): Promise<ActionResult
   if (!parsed.success) return { error: firstIssue(parsed.error) };
 
   const organizationId = await requireOrg();
-  const supabase = await createClient();
+  const db = await createClient();
 
-  const { data, error } = await supabase
+  const { data, error } = await db
     .from("products")
     .insert({
       organization_id: organizationId,
@@ -58,9 +58,9 @@ export async function updateProductAction(productId: string, values: unknown): P
   if (!parsed.success) return { error: firstIssue(parsed.error) };
 
   const organizationId = await requireOrg();
-  const supabase = await createClient();
+  const db = await createClient();
 
-  const { error } = await supabase
+  const { error } = await db
     .from("products")
     .update({
       name: parsed.data.name,
@@ -82,9 +82,9 @@ export async function updateProductAction(productId: string, values: unknown): P
 
 export async function toggleProductActiveAction(productId: string, isActive: boolean): Promise<ActionResult> {
   const organizationId = await requireOrg();
-  const supabase = await createClient();
+  const db = await createClient();
 
-  const { error } = await supabase
+  const { error } = await db
     .from("products")
     .update({ is_active: isActive })
     .eq("id", productId)
@@ -101,9 +101,9 @@ export async function deleteProductAction(productId: string): Promise<ActionResu
   const allowed = await requirePermission("delete_records");
   if (allowed.error) return { error: allowed.error };
   const organizationId = allowed.organizationId;
-  const supabase = await createClient();
+  const db = await createClient();
 
-  const { error } = await supabase
+  const { error } = await db
     .from("products")
     .delete()
     .eq("id", productId)
@@ -125,10 +125,10 @@ export async function createVariantAction(productId: string, values: unknown): P
   if (!parsed.success) return { error: firstIssue(parsed.error) };
 
   const organizationId = await requireOrg();
-  const supabase = await createClient();
+  const db = await createClient();
 
   // Confirm the product belongs to this organization before attaching anything to it.
-  const { data: product } = await supabase
+  const { data: product } = await db
     .from("products")
     .select("id")
     .eq("id", productId)
@@ -137,7 +137,7 @@ export async function createVariantAction(productId: string, values: unknown): P
 
   if (!product) return { error: t.products.errors.notFound };
 
-  const { data: variant, error } = await supabase
+  const { data: variant, error } = await db
     .from("product_variants")
     .insert({
       organization_id: organizationId,
@@ -154,7 +154,7 @@ export async function createVariantAction(productId: string, values: unknown): P
 
   // Opening stock goes through the ledger like every other stock change.
   if (parsed.data.initialStock > 0) {
-    const { error: movementError } = await supabase.rpc("apply_inventory_movement", {
+    const { error: movementError } = await db.rpc("apply_inventory_movement", {
       p_variant_id: variant.id,
       p_movement_type: "purchase",
       p_quantity_change: parsed.data.initialStock,
@@ -177,11 +177,11 @@ export async function updateVariantAction(
   if (!parsed.success) return { error: firstIssue(parsed.error) };
 
   const organizationId = await requireOrg();
-  const supabase = await createClient();
+  const db = await createClient();
 
   // Everything else about a variant is staff work; the selling price is not. Only
   // ask about the permission when the price is actually being changed.
-  const { data: current } = await supabase
+  const { data: current } = await db
     .from("product_variants")
     .select("selling_price")
     .eq("id", variantId)
@@ -194,7 +194,7 @@ export async function updateVariantAction(
   }
 
   // Stock is deliberately not updatable here — only apply_inventory_movement() may change it.
-  const { error } = await supabase
+  const { error } = await db
     .from("product_variants")
     .update({
       name: parsed.data.name,
@@ -216,9 +216,9 @@ export async function deleteVariantAction(productId: string, variantId: string):
   const allowed = await requirePermission("delete_records");
   if (allowed.error) return { error: allowed.error };
   const organizationId = allowed.organizationId;
-  const supabase = await createClient();
+  const db = await createClient();
 
-  const { error } = await supabase
+  const { error } = await db
     .from("product_variants")
     .delete()
     .eq("id", variantId)
@@ -236,9 +236,9 @@ export async function adjustStockAction(productId: string, values: unknown): Pro
   if (!parsed.success) return { error: firstIssue(parsed.error) };
 
   const organizationId = await requireOrg();
-  const supabase = await createClient();
+  const db = await createClient();
 
-  const { data: variant } = await supabase
+  const { data: variant } = await db
     .from("product_variants")
     .select("id, stock")
     .eq("id", parsed.data.variantId)
@@ -250,7 +250,7 @@ export async function adjustStockAction(productId: string, values: unknown): Pro
   const delta = parsed.data.newStock - (variant.stock as number);
   if (delta === 0) return {};
 
-  const { error } = await supabase.rpc("apply_inventory_movement", {
+  const { error } = await db.rpc("apply_inventory_movement", {
     p_variant_id: parsed.data.variantId,
     p_movement_type: "manual_adjustment",
     p_quantity_change: delta,

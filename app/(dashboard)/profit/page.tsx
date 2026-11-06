@@ -8,7 +8,7 @@ import { formatBDT, formatCount } from "@/lib/format";
 import { getMessages } from "@/lib/i18n";
 import { getDictionary } from "@/lib/i18n/locale";
 import { getProductProfit, getProfitSummary, periodRange, type PeriodKey } from "@/lib/profit/queries";
-import { getMembership } from "@/lib/supabase/queries";
+import { getMembership } from "@/lib/db/queries";
 import { cn } from "@/lib/utils";
 
 // Page titles are read once per server, so they stay in English.

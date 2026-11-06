@@ -11,8 +11,8 @@ import { getUserInitials } from "@/lib/dashboard/user";
 import { formatBDT, formatCount } from "@/lib/format";
 import { getMessages, type Messages } from "@/lib/i18n";
 import { getDictionary } from "@/lib/i18n/locale";
-import { createClient } from "@/lib/supabase/server";
-import { getMembership } from "@/lib/supabase/queries";
+import { createClient } from "@/lib/db/server";
+import { getMembership } from "@/lib/db/queries";
 
 // Page titles are read once per server, so they stay in English.
 const tEn = getMessages("en");
@@ -68,7 +68,7 @@ export default async function InventoryPage({
   const { tab, q, low, type, from, to } = await searchParams;
   const membership = await getMembership();
   const organizationId = membership?.organizationId ?? "";
-  const supabase = await createClient();
+  const db = await createClient();
   const initials = await getUserInitials();
 
   const activeTab = tab === "movements" ? "movements" : "levels";
@@ -86,11 +86,11 @@ export default async function InventoryPage({
         <InventoryTabs inventory={t.inventory} active={activeTab} />
 
         {activeTab === "levels" ? (
-          <StockLevels t={t} organizationId={organizationId} supabase={supabase} search={q} lowOnly={low === "1"} />
+          <StockLevels t={t} organizationId={organizationId} db={db} search={q} lowOnly={low === "1"} />
         ) : (
           <MovementLog t={t}
             organizationId={organizationId}
-            supabase={supabase}
+            db={db}
             types={(type ?? "").split(",").filter(Boolean)}
             from={from}
             to={to}
@@ -101,22 +101,22 @@ export default async function InventoryPage({
   );
 }
 
-type SupabaseClient = Awaited<ReturnType<typeof createClient>>;
+type DbClient = Awaited<ReturnType<typeof createClient>>;
 
 async function StockLevels({
   t,
   organizationId,
-  supabase,
+  db,
   search,
   lowOnly,
 }: {
   t: Messages;
   organizationId: string;
-  supabase: SupabaseClient;
+  db: DbClient;
   search?: string;
   lowOnly: boolean;
 }) {
-  const { data } = await supabase
+  const { data } = await db
     .from("product_variants")
     .select("id, name, sku, stock, cost_price, products(id, name, low_stock_threshold)")
     .eq("organization_id", organizationId)
@@ -224,19 +224,19 @@ async function StockLevels({
 async function MovementLog({
   t,
   organizationId,
-  supabase,
+  db,
   types,
   from,
   to,
 }: {
   t: Messages;
   organizationId: string;
-  supabase: SupabaseClient;
+  db: DbClient;
   types: string[];
   from?: string;
   to?: string;
 }) {
-  let query = supabase
+  let query = db
     .from("inventory_movements")
     .select(
       "id, movement_type, quantity_change, stock_after, note, created_at, created_by, product_variants(name, products(name)), orders(id, order_number)",
@@ -256,7 +256,7 @@ async function MovementLog({
   const userIds = [...new Set(rows.map((row) => row.created_by).filter(Boolean))] as string[];
   const names = new Map<string, string>();
   if (userIds.length > 0) {
-    const { data: profiles } = await supabase.from("profiles").select("id, full_name").in("id", userIds);
+    const { data: profiles } = await db.from("profiles").select("id, full_name").in("id", userIds);
     for (const profile of profiles ?? []) {
       if (profile.full_name) names.set(profile.id as string, profile.full_name as string);
     }

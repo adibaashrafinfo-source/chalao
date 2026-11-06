@@ -12,8 +12,8 @@ import { formatBDT, formatCount } from "@/lib/format";
 import { getMessages } from "@/lib/i18n";
 import { getDictionary } from "@/lib/i18n/locale";
 import { can } from "@/lib/permissions";
-import { createClient } from "@/lib/supabase/server";
-import { getMembership } from "@/lib/supabase/queries";
+import { createClient } from "@/lib/db/server";
+import { getMembership } from "@/lib/db/queries";
 
 // Page titles are read once per server, so they stay in English.
 const tEn = getMessages("en");
@@ -29,14 +29,14 @@ export default async function CodPage() {
   if (!membership) redirect("/onboarding");
   const organizationId = membership.organizationId;
 
-  const supabase = await createClient();
+  const db = await createClient();
 
   const [initials, summary, unsettled, payouts, { data: courierRows }] = await Promise.all([
     getUserInitials(),
     getCodSummary(organizationId),
     listUnsettledShipments(organizationId),
     listPayouts(organizationId),
-    supabase
+    db
       .from("courier_accounts")
       .select("id, label, provider")
       .eq("organization_id", organizationId)

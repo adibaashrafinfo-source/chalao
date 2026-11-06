@@ -8,7 +8,7 @@ import {
   type ConfirmationRules,
 } from "@/lib/orders/confirmation-types";
 import type { CustomerRisk, RiskLevel } from "@/lib/risk/types";
-import { createClient } from "@/lib/supabase/server";
+import { createClient } from "@/lib/db/server";
 
 type DecisionRow = {
   action: "auto" | "manual";
@@ -31,8 +31,8 @@ type DecisionRow = {
 };
 
 export async function getConfirmationDecision(orderId: string): Promise<ConfirmationDecision | null> {
-  const supabase = await createClient();
-  const { data, error } = await supabase.rpc("order_confirmation_decision", { p_order_id: orderId });
+  const db = await createClient();
+  const { data, error } = await db.rpc("order_confirmation_decision", { p_order_id: orderId });
 
   if (error || !data) return null;
 
@@ -63,8 +63,8 @@ export async function getConfirmationDecision(orderId: string): Promise<Confirma
 }
 
 export async function getConfirmationRules(organizationId: string): Promise<ConfirmationRules> {
-  const supabase = await createClient();
-  const { data } = await supabase
+  const db = await createClient();
+  const { data } = await db
     .from("order_confirmation_rules")
     .select("auto_confirm_enabled, auto_confirm_max_total, auto_confirm_new_customers, advance_payment_above")
     .eq("organization_id", organizationId)

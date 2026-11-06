@@ -11,8 +11,9 @@ import { listCourierAdapters } from "@/lib/couriers/registry";
 import { getMessages } from "@/lib/i18n";
 import { getDictionary } from "@/lib/i18n/locale";
 import { can } from "@/lib/permissions";
-import { createClient } from "@/lib/supabase/server";
-import { getMembership } from "@/lib/supabase/queries";
+import { createClient } from "@/lib/db/server";
+import { getMembership } from "@/lib/db/queries";
+import { siteUrl } from "@/lib/site-url";
 
 // Page titles are read once per server, so they stay in English.
 const tEn = getMessages("en");
@@ -23,12 +24,12 @@ export default async function CouriersPage() {
   // The dictionary is fetched here, not at module level: it is per person.
   const t = await getDictionary();
   const membership = await getMembership();
-  const supabase = await createClient();
+  const db = await createClient();
   const initials = await getUserInitials();
 
   const performance = await getCourierPerformance(membership?.organizationId ?? "");
 
-  const { data, error } = await supabase
+  const { data, error } = await db
     .from("courier_accounts")
     .select("id, provider, label, is_active, last_tested_at, webhook_token")
     .eq("organization_id", membership?.organizationId ?? "")
@@ -43,7 +44,7 @@ export default async function CouriersPage() {
   }));
   const providerLabels = new Map<string, string>(providers.map((entry) => [entry.provider, entry.label]));
 
-  const webhookBaseUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000";
+  const webhookBaseUrl = siteUrl();
 
   return (
     <>

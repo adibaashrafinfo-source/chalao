@@ -7,8 +7,8 @@ import { z } from "zod";
 import { getMessages } from "@/lib/i18n";
 import { requirePermission } from "@/lib/permissions-server";
 import { recordAudit } from "@/lib/audit";
-import { createClient } from "@/lib/supabase/server";
-import { getMembership } from "@/lib/supabase/queries";
+import { createClient } from "@/lib/db/server";
+import { getMembership } from "@/lib/db/queries";
 
 const t = getMessages("en");
 
@@ -50,12 +50,12 @@ export async function recordPayoutAction(values: unknown): Promise<ActionResult>
   const allowed = await requirePermission("manage_cod");
   if (allowed.error) return { error: allowed.error };
 
-  const supabase = await createClient();
+  const db = await createClient();
   const input = parsed.data;
 
   // The payout and its lines are written by one function, so a parcel that turns
   // out to be settled already cannot leave half a payout behind.
-  const { error } = await supabase.rpc("record_courier_payout", {
+  const { error } = await db.rpc("record_courier_payout", {
     p_courier_account_id: input.courierAccountId,
     p_provider: input.provider,
     p_paid_on: input.paidOn,
@@ -91,9 +91,9 @@ export async function deletePayoutAction(payoutId: string): Promise<ActionResult
   const allowed = await requirePermission("manage_cod");
   if (allowed.error) return { error: allowed.error };
   const organizationId = allowed.organizationId;
-  const supabase = await createClient();
+  const db = await createClient();
 
-  const { error } = await supabase
+  const { error } = await db
     .from("courier_payouts")
     .delete()
     .eq("id", payoutId)

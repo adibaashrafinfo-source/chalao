@@ -3,8 +3,8 @@
 import { redirect } from "next/navigation";
 
 import { normalizeBdPhone } from "@/lib/phone";
-import { createClient } from "@/lib/supabase/server";
-import { getMembership } from "@/lib/supabase/queries";
+import { createClient } from "@/lib/db/server";
+import { getMembership } from "@/lib/db/queries";
 
 export type SearchHit = {
   kind: "order" | "customer" | "product";
@@ -27,7 +27,7 @@ export async function globalSearchAction(term: string): Promise<SearchHit[]> {
   if (!membership) redirect("/login");
   const organizationId = membership.organizationId;
 
-  const supabase = await createClient();
+  const db = await createClient();
   // % and , would otherwise change the meaning of a PostgREST filter.
   const safe = query.replace(/[%,]/g, "");
   const digits = normalizeBdPhone(safe).replace(/[%,]/g, "");
@@ -35,7 +35,7 @@ export async function globalSearchAction(term: string): Promise<SearchHit[]> {
   const [orders, customers, products] = await Promise.all([
     // An order number is the fastest way in, so it is matched exactly.
     /^\d+$/.test(safe)
-      ? supabase
+      ? db
           .from("orders")
           .select("id, order_number, total, status, customers(name)")
           .eq("organization_id", organizationId)
@@ -43,7 +43,7 @@ export async function globalSearchAction(term: string): Promise<SearchHit[]> {
           .limit(3)
       : Promise.resolve({ data: [] as never[] }),
 
-    supabase
+    db
       .from("customers")
       .select("id, name, phone, district")
       .eq("organization_id", organizationId)
@@ -52,7 +52,7 @@ export async function globalSearchAction(term: string): Promise<SearchHit[]> {
       .or(digits ? `name.ilike.%${safe}%,phone.ilike.%${digits}%` : `name.ilike.%${safe}%`)
       .limit(5),
 
-    supabase
+    db
       .from("products")
       .select("id, name, sku, category")
       .eq("organization_id", organizationId)

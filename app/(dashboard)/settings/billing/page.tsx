@@ -10,8 +10,8 @@ import { getUserInitials } from "@/lib/dashboard/user";
 import { formatBDT, formatCount } from "@/lib/format";
 import { getMessages } from "@/lib/i18n";
 import { getDictionary } from "@/lib/i18n/locale";
-import { createClient } from "@/lib/supabase/server";
-import { getMembership } from "@/lib/supabase/queries";
+import { createClient } from "@/lib/db/server";
+import { getMembership } from "@/lib/db/queries";
 import { cn } from "@/lib/utils";
 
 // Page titles are read once per server, so they stay in English.
@@ -59,17 +59,17 @@ export default async function BillingPage() {
   const membership = await getMembership();
   if (!membership) redirect("/onboarding");
 
-  const supabase = await createClient();
+  const db = await createClient();
   const initials = await getUserInitials();
 
   const [{ data: overviewData }, { data: planRows }, { data: submissionRows }] = await Promise.all([
-    supabase.rpc("subscription_overview", { p_organization_id: membership.organizationId }),
-    supabase
+    db.rpc("subscription_overview", { p_organization_id: membership.organizationId }),
+    db
       .from("subscription_plans")
       .select("code, name, monthly_price")
       .eq("is_active", true)
       .order("sort_order"),
-    supabase
+    db
       .from("payment_submissions")
       .select("id, plan_code, months, amount, method, transaction_id, status, review_note, created_at")
       .eq("organization_id", membership.organizationId)

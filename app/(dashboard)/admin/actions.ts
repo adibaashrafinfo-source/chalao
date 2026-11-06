@@ -4,7 +4,7 @@ import { revalidatePath, revalidateTag } from "next/cache";
 import { z } from "zod";
 
 import { PLANS_TAG } from "@/lib/plans";
-import { createClient } from "@/lib/supabase/server";
+import { createClient } from "@/lib/db/server";
 import { isPlatformAdmin } from "@/lib/site-settings";
 
 export type ActionResult = { error?: string };
@@ -35,8 +35,8 @@ export async function changePlanAction(values: unknown): Promise<ActionResult> {
   const parsed = planSchema.safeParse(values);
   if (!parsed.success) return { error: parsed.error.issues[0]?.message ?? "Invalid details" };
 
-  const supabase = await createClient();
-  const { error } = await supabase.rpc("admin_set_subscription", {
+  const db = await createClient();
+  const { error } = await db.rpc("admin_set_subscription", {
     p_organization_id: parsed.data.organizationId,
     p_plan_code: parsed.data.planCode,
     p_note: parsed.data.note || null,
@@ -61,8 +61,8 @@ export async function setSuspendedAction(values: unknown): Promise<ActionResult>
   const parsed = statusSchema.safeParse(values);
   if (!parsed.success) return { error: parsed.error.issues[0]?.message ?? "Invalid details" };
 
-  const supabase = await createClient();
-  const { error } = await supabase.rpc("admin_set_subscription", {
+  const db = await createClient();
+  const { error } = await db.rpc("admin_set_subscription", {
     p_organization_id: parsed.data.organizationId,
     p_status: parsed.data.suspend ? "suspended" : "active",
     p_note: parsed.data.note || null,
@@ -90,8 +90,8 @@ export async function setPeriodEndAction(values: unknown): Promise<ActionResult>
   if (!parsed.success) return { error: parsed.error.issues[0]?.message ?? "Invalid details" };
   if (!parsed.data.clear && !parsed.data.periodEnd) return { error: "Pick a date" };
 
-  const supabase = await createClient();
-  const { error } = await supabase.rpc("admin_set_subscription", {
+  const db = await createClient();
+  const { error } = await db.rpc("admin_set_subscription", {
     p_organization_id: parsed.data.organizationId,
     p_period_end: parsed.data.clear ? null : parsed.data.periodEnd,
     p_clear_period: parsed.data.clear,
@@ -122,8 +122,8 @@ export async function recordPaymentAction(values: unknown): Promise<ActionResult
   const parsed = paymentSchema.safeParse(values);
   if (!parsed.success) return { error: parsed.error.issues[0]?.message ?? "Invalid details" };
 
-  const supabase = await createClient();
-  const { error } = await supabase.rpc("admin_record_payment", {
+  const db = await createClient();
+  const { error } = await db.rpc("admin_record_payment", {
     p_organization_id: parsed.data.organizationId,
     p_plan_code: parsed.data.planCode,
     p_months: parsed.data.months,
@@ -162,11 +162,11 @@ export async function updatePlanAction(values: unknown): Promise<ActionResult> {
   const parsed = planEditSchema.safeParse(values);
   if (!parsed.success) return { error: parsed.error.issues[0]?.message ?? "Invalid details" };
 
-  const supabase = await createClient();
+  const db = await createClient();
 
   // Only one plan may carry the badge, so clear the others first.
   if (parsed.data.isFeatured) {
-    const { error: clearError } = await supabase
+    const { error: clearError } = await db
       .from("subscription_plans")
       .update({ is_featured: false })
       .neq("code", parsed.data.code)
@@ -175,7 +175,7 @@ export async function updatePlanAction(values: unknown): Promise<ActionResult> {
     if (clearError) return { error: clearError.message };
   }
 
-  const { error } = await supabase
+  const { error } = await db
     .from("subscription_plans")
     .update({
       name: parsed.data.name,
@@ -213,8 +213,8 @@ export async function reviewSubmissionAction(values: unknown): Promise<ActionRes
   const parsed = reviewSchema.safeParse(values);
   if (!parsed.success) return { error: parsed.error.issues[0]?.message ?? "Invalid details" };
 
-  const supabase = await createClient();
-  const { error } = await supabase.rpc("admin_review_submission", {
+  const db = await createClient();
+  const { error } = await db.rpc("admin_review_submission", {
     p_submission_id: parsed.data.submissionId,
     p_approve: parsed.data.approve,
     p_note: parsed.data.note || null,

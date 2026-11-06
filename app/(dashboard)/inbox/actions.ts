@@ -5,10 +5,10 @@ import { redirect } from "next/navigation";
 
 import { getChannelAdapter } from "@/lib/channels/registry";
 import { getMessages } from "@/lib/i18n";
-import { createAdminClient, hasServiceRoleKey } from "@/lib/supabase/admin";
-import { createClient } from "@/lib/supabase/server";
-import { getMembership } from "@/lib/supabase/queries";
-import { getCurrentUser } from "@/lib/supabase/user";
+import { createAdminClient, hasServiceRoleKey } from "@/lib/db/server";
+import { createClient } from "@/lib/db/server";
+import { getMembership } from "@/lib/db/queries";
+import { getCurrentUser } from "@/lib/auth/session";
 
 const t = getMessages("en");
 
@@ -30,9 +30,9 @@ export async function sendReplyAction(conversationId: string, body: string): Pro
   if (!text) return { error: t.inbox.errors.empty };
 
   const organizationId = await requireOrg();
-  const supabase = await createClient();
+  const db = await createClient();
 
-  const { data: conversation } = await supabase
+  const { data: conversation } = await db
     .from("conversations")
     .select("id, status, external_id, channel_connection_id, channel_connections(provider, is_active)")
     .eq("id", conversationId)
@@ -55,7 +55,7 @@ export async function sendReplyAction(conversationId: string, body: string): Pro
     return { error: t.channels.errors.unknownProvider };
   }
 
-  const { data: messageId, error: storeError } = await supabase.rpc("record_outbound_message", {
+  const { data: messageId, error: storeError } = await db.rpc("record_outbound_message", {
     p_conversation_id: conversationId,
     p_body: text,
     p_author: "agent",
@@ -65,7 +65,7 @@ export async function sendReplyAction(conversationId: string, body: string): Pro
 
   // Replying to a finished conversation opens it again.
   if (conversation.status === "closed" || conversation.status === "snoozed") {
-    await supabase
+    await db
       .from("conversations")
       .update({ status: "open", snoozed_until: null })
       .eq("id", conversationId)
@@ -92,7 +92,7 @@ export async function sendReplyAction(conversationId: string, body: string): Pro
       body: text,
     });
 
-    await supabase.rpc("update_message_delivery", {
+    await db.rpc("update_message_delivery", {
       p_message_id: messageId,
       p_delivery: "sent",
       p_external_id: result.externalId,
@@ -100,7 +100,7 @@ export async function sendReplyAction(conversationId: string, body: string): Pro
     });
   } catch (error) {
     sendError = error instanceof Error ? error.message : t.inbox.errors.sendFailed;
-    await supabase.rpc("update_message_delivery", {
+    await db.rpc("update_message_delivery", {
       p_message_id: messageId,
       p_delivery: "failed",
       p_external_id: null,
@@ -117,9 +117,9 @@ export async function setConversationStatusAction(
   status: "open" | "pending" | "closed",
 ): Promise<ActionResult> {
   const organizationId = await requireOrg();
-  const supabase = await createClient();
+  const db = await createClient();
 
-  const { error } = await supabase
+  const { error } = await db
     .from("conversations")
     .update({ status, snoozed_until: null })
     .eq("id", conversationId)
@@ -139,9 +139,9 @@ export async function assignConversationAction(
   const user = await getCurrentUser();
   if (!user) redirect("/login");
 
-  const supabase = await createClient();
+  const db = await createClient();
 
-  const { error } = await supabase
+  const { error } = await db
     .from("conversations")
     .update({ assigned_to: assignToMe ? user.id : null })
     .eq("id", conversationId)
@@ -159,10 +159,10 @@ export async function linkCustomerAction(
   customerId: string | null,
 ): Promise<ActionResult> {
   const organizationId = await requireOrg();
-  const supabase = await createClient();
+  const db = await createClient();
 
   if (customerId) {
-    const { data: customer } = await supabase
+    const { data: customer } = await db
       .from("customers")
       .select("id")
       .eq("id", customerId)
@@ -172,7 +172,7 @@ export async function linkCustomerAction(
     if (!customer) return { error: t.inbox.errors.generic };
   }
 
-  const { error } = await supabase
+  const { error } = await db
     .from("conversations")
     .update({ customer_id: customerId })
     .eq("id", conversationId)
@@ -186,7 +186,7 @@ export async function linkCustomerAction(
 
 export async function markConversationReadAction(conversationId: string): Promise<void> {
   await requireOrg();
-  const supabase = await createClient();
-  await supabase.rpc("mark_conversation_read", { p_conversation_id: conversationId });
+  const db = await createClient();
+  await db.rpc("mark_conversation_read", { p_conversation_id: conversationId });
   revalidatePath("/inbox");
 }

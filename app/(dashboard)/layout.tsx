@@ -5,8 +5,8 @@ import { MobileNav } from "@/components/dashboard/mobile-nav";
 import { Sidebar } from "@/components/dashboard/sidebar";
 import { getMessages } from "@/lib/i18n";
 import { isPlatformAdmin } from "@/lib/site-settings";
-import { getMembership } from "@/lib/supabase/queries";
-import { getCurrentUser } from "@/lib/supabase/user";
+import { getMembership } from "@/lib/db/queries";
+import { getCurrentUser } from "@/lib/auth/session";
 
 // Every dashboard screen depends on the signed-in user, so none of them are
 // prerendered at build time.

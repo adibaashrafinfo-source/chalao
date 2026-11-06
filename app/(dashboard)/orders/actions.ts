@@ -6,8 +6,8 @@ import { redirect } from "next/navigation";
 import { getMessages } from "@/lib/i18n";
 import { gateReasonFromError } from "@/lib/subscription";
 import { requirePermission } from "@/lib/permissions-server";
-import { createClient } from "@/lib/supabase/server";
-import { getMembership } from "@/lib/supabase/queries";
+import { createClient } from "@/lib/db/server";
+import { getMembership } from "@/lib/db/queries";
 import { orderCreateSchema, orderDetailsSchema, orderItemSchema } from "@/lib/validations/order";
 
 const t = getMessages("en");
@@ -20,17 +20,17 @@ async function requireOrg() {
   return membership.organizationId;
 }
 
-type SupabaseClient = Awaited<ReturnType<typeof createClient>>;
+type DbClient = Awaited<ReturnType<typeof createClient>>;
 
 /** Totals always come from the stored items — never from numbers the browser sent. */
-async function recalculateTotals(supabase: SupabaseClient, organizationId: string, orderId: string) {
-  const { data: items } = await supabase
+async function recalculateTotals(db: DbClient, organizationId: string, orderId: string) {
+  const { data: items } = await db
     .from("order_items")
     .select("line_total")
     .eq("order_id", orderId)
     .eq("organization_id", organizationId);
 
-  const { data: order } = await supabase
+  const { data: order } = await db
     .from("orders")
     .select("discount, delivery_charge")
     .eq("id", orderId)
@@ -42,7 +42,7 @@ async function recalculateTotals(supabase: SupabaseClient, organizationId: strin
   const subtotal = (items ?? []).reduce((sum, item) => sum + Number(item.line_total), 0);
   const total = Math.max(0, subtotal - Number(order.discount) + Number(order.delivery_charge));
 
-  await supabase
+  await db
     .from("orders")
     .update({ subtotal, total })
     .eq("id", orderId)
@@ -54,14 +54,14 @@ export async function createOrderAction(values: unknown): Promise<ActionResult> 
   if (!parsed.success) return { error: parsed.error.issues[0]?.message ?? t.orders.errors.invalid };
 
   const organizationId = await requireOrg();
-  const supabase = await createClient();
+  const db = await createClient();
   const input = parsed.data;
 
   // ---- customer: existing, or created from the inline fields
   let customerId = input.customerId ?? null;
 
   if (!customerId && input.newCustomer) {
-    const { data: existing } = await supabase
+    const { data: existing } = await db
       .from("customers")
       .select("id")
       .eq("organization_id", organizationId)
@@ -71,7 +71,7 @@ export async function createOrderAction(values: unknown): Promise<ActionResult> 
     if (existing) {
       customerId = existing.id as string;
     } else {
-      const { data: created, error: customerError } = await supabase
+      const { data: created, error: customerError } = await db
         .from("customers")
         .insert({
           organization_id: organizationId,
@@ -90,7 +90,7 @@ export async function createOrderAction(values: unknown): Promise<ActionResult> 
 
   if (!customerId) return { error: t.orders.errors.customerRequired };
 
-  const { data: customer } = await supabase
+  const { data: customer } = await db
     .from("customers")
     .select("id, address, district")
     .eq("id", customerId)
@@ -101,7 +101,7 @@ export async function createOrderAction(values: unknown): Promise<ActionResult> 
 
   // ---- items: every variant must belong to this organization
   const variantIds = input.items.map((item) => item.variantId);
-  const { data: variants } = await supabase
+  const { data: variants } = await db
     .from("product_variants")
     .select("id, name, selling_price, cost_price, products(name)")
     .eq("organization_id", organizationId)
@@ -116,7 +116,7 @@ export async function createOrderAction(values: unknown): Promise<ActionResult> 
   // Only link a conversation this organization actually owns.
   let conversationId: string | null = null;
   if (input.conversationId) {
-    const { data: conversation } = await supabase
+    const { data: conversation } = await db
       .from("conversations")
       .select("id")
       .eq("id", input.conversationId)
@@ -125,7 +125,7 @@ export async function createOrderAction(values: unknown): Promise<ActionResult> 
     conversationId = (conversation?.id as string | undefined) ?? null;
   }
 
-  const { data: order, error: orderError } = await supabase
+  const { data: order, error: orderError } = await db
     .from("orders")
     .insert({
       organization_id: organizationId,
@@ -169,22 +169,22 @@ export async function createOrderAction(values: unknown): Promise<ActionResult> 
     };
   });
 
-  const { error: itemsError } = await supabase.from("order_items").insert(rows);
+  const { error: itemsError } = await db.from("order_items").insert(rows);
   if (itemsError) {
     // Don't leave an order with no lines behind.
-    await supabase.from("orders").delete().eq("id", order.id).eq("organization_id", organizationId);
+    await db.from("orders").delete().eq("id", order.id).eq("organization_id", organizationId);
     return { error: itemsError.message };
   }
 
   // The seller's own rules decide whether this one can be confirmed without them.
   // It returns false rather than throwing when it cannot — a stock shortage must
   // not cost the seller the order they just took.
-  await supabase.rpc("auto_confirm_order", { p_order_id: order.id });
+  await db.rpc("auto_confirm_order", { p_order_id: order.id });
 
   // Ordering from a conversation is the clearest possible statement of who the
   // person is, so tie the conversation to the customer if nobody has yet.
   if (conversationId) {
-    await supabase
+    await db
       .from("conversations")
       .update({ customer_id: customerId })
       .eq("id", conversationId)
@@ -202,9 +202,9 @@ export async function updateOrderDetailsAction(orderId: string, values: unknown)
   if (!parsed.success) return { error: parsed.error.issues[0]?.message ?? t.orders.errors.invalid };
 
   const organizationId = await requireOrg();
-  const supabase = await createClient();
+  const db = await createClient();
 
-  const { data: order } = await supabase
+  const { data: order } = await db
     .from("orders")
     .select("status")
     .eq("id", orderId)
@@ -214,7 +214,7 @@ export async function updateOrderDetailsAction(orderId: string, values: unknown)
   if (!order) return { error: t.orders.errors.notFound };
   if (order.status !== "new" && order.status !== "confirmed") return { error: t.orders.errors.locked };
 
-  const { error } = await supabase
+  const { error } = await db
     .from("orders")
     .update({
       discount: parsed.data.discount,
@@ -229,7 +229,7 @@ export async function updateOrderDetailsAction(orderId: string, values: unknown)
 
   if (error) return { error: error.message };
 
-  await recalculateTotals(supabase, organizationId, orderId);
+  await recalculateTotals(db, organizationId, orderId);
   revalidatePath(`/orders/${orderId}`);
   revalidatePath("/orders");
   return {};
@@ -240,9 +240,9 @@ export async function addOrderItemAction(orderId: string, values: unknown): Prom
   if (!parsed.success) return { error: parsed.error.issues[0]?.message ?? t.orders.errors.invalid };
 
   const organizationId = await requireOrg();
-  const supabase = await createClient();
+  const db = await createClient();
 
-  const { data: order } = await supabase
+  const { data: order } = await db
     .from("orders")
     .select("status")
     .eq("id", orderId)
@@ -253,7 +253,7 @@ export async function addOrderItemAction(orderId: string, values: unknown): Prom
   // Items are frozen once the order is confirmed, because stock has moved by then.
   if (order.status !== "new") return { error: t.orders.errors.itemsLocked };
 
-  const { data: variant } = await supabase
+  const { data: variant } = await db
     .from("product_variants")
     .select("id, name, cost_price, products(name)")
     .eq("id", parsed.data.variantId)
@@ -265,7 +265,7 @@ export async function addOrderItemAction(orderId: string, values: unknown): Prom
   const product = variant.products as { name: string } | { name: string }[] | null;
   const productName = (Array.isArray(product) ? product[0]?.name : product?.name) ?? "Product";
 
-  const { error } = await supabase.from("order_items").insert({
+  const { error } = await db.from("order_items").insert({
     organization_id: organizationId,
     order_id: orderId,
     variant_id: variant.id as string,
@@ -279,16 +279,16 @@ export async function addOrderItemAction(orderId: string, values: unknown): Prom
 
   if (error) return { error: error.message };
 
-  await recalculateTotals(supabase, organizationId, orderId);
+  await recalculateTotals(db, organizationId, orderId);
   revalidatePath(`/orders/${orderId}`);
   return {};
 }
 
 export async function removeOrderItemAction(orderId: string, itemId: string): Promise<ActionResult> {
   const organizationId = await requireOrg();
-  const supabase = await createClient();
+  const db = await createClient();
 
-  const { data: order } = await supabase
+  const { data: order } = await db
     .from("orders")
     .select("status")
     .eq("id", orderId)
@@ -298,7 +298,7 @@ export async function removeOrderItemAction(orderId: string, itemId: string): Pr
   if (!order) return { error: t.orders.errors.notFound };
   if (order.status !== "new") return { error: t.orders.errors.itemsLocked };
 
-  const { count } = await supabase
+  const { count } = await db
     .from("order_items")
     .select("id", { count: "exact", head: true })
     .eq("order_id", orderId)
@@ -306,7 +306,7 @@ export async function removeOrderItemAction(orderId: string, itemId: string): Pr
 
   if ((count ?? 0) <= 1) return { error: t.orders.errors.lastItem };
 
-  const { error } = await supabase
+  const { error } = await db
     .from("order_items")
     .delete()
     .eq("id", itemId)
@@ -315,7 +315,7 @@ export async function removeOrderItemAction(orderId: string, itemId: string): Pr
 
   if (error) return { error: error.message };
 
-  await recalculateTotals(supabase, organizationId, orderId);
+  await recalculateTotals(db, organizationId, orderId);
   revalidatePath(`/orders/${orderId}`);
   return {};
 }
@@ -334,10 +334,10 @@ export async function transitionOrderStatusAction(
     if (allowed.error) return { error: allowed.error };
   }
 
-  const supabase = await createClient();
+  const db = await createClient();
 
   // The database validates the move, writes order_status_history and moves stock.
-  const { error } = await supabase.rpc("transition_order_status", {
+  const { error } = await db.rpc("transition_order_status", {
     p_order_id: orderId,
     p_new_status: newStatus,
     p_note: note && note.trim() ? note.trim() : null,
@@ -371,10 +371,10 @@ export async function bulkTransitionAction(orderIds: string[], newStatus: string
     if (allowed.error) return { error: allowed.error };
   }
 
-  const supabase = await createClient();
+  const db = await createClient();
 
   // Only this organization's orders, whatever the browser sent.
-  const { data: orders } = await supabase
+  const { data: orders } = await db
     .from("orders")
     .select("id, order_number")
     .eq("organization_id", organizationId)
@@ -384,7 +384,7 @@ export async function bulkTransitionAction(orderIds: string[], newStatus: string
   const failed: string[] = [];
 
   for (const order of orders ?? []) {
-    const { error } = await supabase.rpc("transition_order_status", {
+    const { error } = await db.rpc("transition_order_status", {
       p_order_id: order.id,
       p_new_status: newStatus,
       p_note: null,

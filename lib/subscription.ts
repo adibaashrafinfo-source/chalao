@@ -1,6 +1,6 @@
 import "server-only";
 
-import { createClient } from "@/lib/supabase/server";
+import { createClient } from "@/lib/db/server";
 
 export type GateReason = "SUBSCRIPTION_SUSPENDED" | "SUBSCRIPTION_EXPIRED" | "ORDER_LIMIT_REACHED";
 
@@ -26,8 +26,8 @@ const openGate: OrderGate = {
  * before the seller fills in a form.
  */
 export async function getOrderGate(organizationId: string): Promise<OrderGate> {
-  const supabase = await createClient();
-  const { data, error } = await supabase.rpc("subscription_order_gate", {
+  const db = await createClient();
+  const { data, error } = await db.rpc("subscription_order_gate", {
     p_organization_id: organizationId,
   });
 

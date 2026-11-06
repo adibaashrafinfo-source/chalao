@@ -2,11 +2,10 @@ import "server-only";
 
 import { cache } from "react";
 import { unstable_cache } from "next/cache";
-import { createClient as createPublicClient } from "@supabase/supabase-js";
 
-import { getSupabaseEnv } from "@/lib/env";
-import { createClient } from "@/lib/supabase/server";
-import { getCurrentUser } from "@/lib/supabase/user";
+import { hasDatabaseConfig } from "@/lib/db/pool";
+import { createAdminClient, createClient } from "@/lib/db/server";
+import { getCurrentUser } from "@/lib/auth/session";
 
 export type SocialKey = "facebook" | "instagram" | "youtube" | "tiktok" | "linkedin" | "whatsapp";
 
@@ -28,21 +27,18 @@ const empty: SiteSettings = {
 /**
  * Public marketing settings for the footer.
  *
- * Read with a plain anon client rather than the cookie-bound one: no session is needed,
+ * Read with a client that needs no login rather than the cookie-bound one: no session is needed,
  * and staying away from cookies() keeps the marketing pages statically rendered. The
  * result is cached and refreshed when an admin saves (revalidateTag).
  */
 export const getSiteSettings = unstable_cache(
   async function loadSiteSettings(): Promise<SiteSettings> {
-    const env = getSupabaseEnv();
-    // No Supabase configured (or a build without env): the footer simply shows no icons.
-    if (!env) return empty;
+    // No database configured (or a build without env): the footer simply shows no icons.
+    if (!hasDatabaseConfig()) return empty;
 
-    const supabase = createPublicClient(env.url, env.anonKey, {
-      auth: { persistSession: false, autoRefreshToken: false },
-    });
+    const db = createAdminClient();
 
-    const { data, error } = await supabase
+    const { data, error } = await db
       .from("site_settings")
       .select("facebook_url, instagram_url, youtube_url, tiktok_url, linkedin_url, whatsapp_url")
       .eq("id", 1)
@@ -68,8 +64,8 @@ export const isPlatformAdmin = cache(async function isPlatformAdmin(): Promise<b
   const user = await getCurrentUser();
   if (!user) return false;
 
-  const supabase = await createClient();
-  const { data } = await supabase
+  const db = await createClient();
+  const { data } = await db
     .from("platform_admins")
     .select("user_id")
     .eq("user_id", user.id)

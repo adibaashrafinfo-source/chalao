@@ -7,8 +7,8 @@ import { getMessages } from "@/lib/i18n";
 import { normalizeBdPhone } from "@/lib/phone";
 import { requirePermission } from "@/lib/permissions-server";
 import { recordAudit } from "@/lib/audit";
-import { createClient } from "@/lib/supabase/server";
-import { getMembership } from "@/lib/supabase/queries";
+import { createClient } from "@/lib/db/server";
+import { getMembership } from "@/lib/db/queries";
 import { customerSchema } from "@/lib/validations/customer";
 
 const t = getMessages("en");
@@ -38,9 +38,9 @@ export async function createCustomerAction(values: unknown): Promise<ActionResul
   if (!parsed.success) return { error: parsed.error.issues[0]?.message ?? "Invalid details" };
 
   const organizationId = await requireOrg();
-  const supabase = await createClient();
+  const db = await createClient();
 
-  const { data, error } = await supabase
+  const { data, error } = await db
     .from("customers")
     .insert({ organization_id: organizationId, ...toRow(parsed.data) })
     .select("id")
@@ -58,9 +58,9 @@ export async function updateCustomerAction(customerId: string, values: unknown):
   if (!parsed.success) return { error: parsed.error.issues[0]?.message ?? "Invalid details" };
 
   const organizationId = await requireOrg();
-  const supabase = await createClient();
+  const db = await createClient();
 
-  const { error } = await supabase
+  const { error } = await db
     .from("customers")
     .update(toRow(parsed.data))
     .eq("id", customerId)
@@ -77,9 +77,9 @@ export async function deleteCustomerAction(customerId: string): Promise<ActionRe
   const allowed = await requirePermission("delete_records");
   if (allowed.error) return { error: allowed.error };
   const organizationId = allowed.organizationId;
-  const supabase = await createClient();
+  const db = await createClient();
 
-  const { error } = await supabase
+  const { error } = await db
     .from("customers")
     .delete()
     .eq("id", customerId)
@@ -111,7 +111,7 @@ export async function findCustomersByPhoneAction(query: string): Promise<Custome
   if (term.length < 3) return [];
 
   const organizationId = await requireOrg();
-  const supabase = await createClient();
+  const db = await createClient();
 
   const safe = term.replace(/[%,]/g, "");
   // A term with no digits normalises to an empty phone, and "%%" would match everyone.
@@ -119,7 +119,7 @@ export async function findCustomersByPhoneAction(query: string): Promise<Custome
   const clauses = [`name.ilike.%${safe}%`];
   if (phoneTerm) clauses.unshift(`phone.ilike.%${phoneTerm}%`);
 
-  const { data } = await supabase
+  const { data } = await db
     .from("customers")
     .select("id, name, phone, address, district")
     .eq("organization_id", organizationId)

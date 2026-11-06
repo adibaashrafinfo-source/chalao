@@ -7,8 +7,8 @@ import { redirect } from "next/navigation";
 import { findChannelAdapter } from "@/lib/channels/registry";
 import { getMessages } from "@/lib/i18n";
 import { requirePermission } from "@/lib/permissions-server";
-import { createClient } from "@/lib/supabase/server";
-import { getMembership } from "@/lib/supabase/queries";
+import { createClient } from "@/lib/db/server";
+import { getMembership } from "@/lib/db/queries";
 
 const t = getMessages("en");
 
@@ -35,9 +35,9 @@ export async function createChannelAction(values: {
   const allowed = await requirePermission("manage_channels");
   if (allowed.error) return { error: allowed.error };
   const organizationId = allowed.organizationId;
-  const supabase = await createClient();
+  const db = await createClient();
 
-  const { error } = await supabase.from("channel_connections").insert({
+  const { error } = await db.from("channel_connections").insert({
     organization_id: organizationId,
     provider: adapter.provider,
     label,
@@ -59,9 +59,9 @@ export async function setChannelActiveAction(connectionId: string, isActive: boo
   const allowed = await requirePermission("manage_channels");
   if (allowed.error) return { error: allowed.error };
   const organizationId = allowed.organizationId;
-  const supabase = await createClient();
+  const db = await createClient();
 
-  const { error } = await supabase
+  const { error } = await db
     .from("channel_connections")
     .update({ is_active: isActive })
     .eq("id", connectionId)
@@ -82,9 +82,9 @@ export async function deleteChannelAction(connectionId: string): Promise<ActionR
   const allowed = await requirePermission("manage_channels");
   if (allowed.error) return { error: allowed.error };
   const organizationId = allowed.organizationId;
-  const supabase = await createClient();
+  const db = await createClient();
 
-  const { count } = await supabase
+  const { count } = await db
     .from("conversations")
     .select("id", { count: "exact", head: true })
     .eq("organization_id", organizationId)
@@ -92,7 +92,7 @@ export async function deleteChannelAction(connectionId: string): Promise<ActionR
 
   if ((count ?? 0) > 0) return { error: t.channels.errors.hasConversations };
 
-  const { error } = await supabase
+  const { error } = await db
     .from("channel_connections")
     .delete()
     .eq("id", connectionId)
@@ -120,9 +120,9 @@ export async function simulateInboundAction(values: {
   if (!body || !threadId) return { error: t.channels.errors.invalid };
 
   await requireOrg();
-  const supabase = await createClient();
+  const db = await createClient();
 
-  const { error } = await supabase.rpc("record_inbound_message", {
+  const { error } = await db.rpc("record_inbound_message", {
     p_connection_id: values.connectionId,
     p_thread_id: threadId,
     p_body: body,

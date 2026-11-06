@@ -5,8 +5,8 @@ import { redirect } from "next/navigation";
 import { Logo } from "@/components/brand/logo";
 import { OnboardingForm } from "@/components/onboarding/onboarding-form";
 import { getMessages } from "@/lib/i18n";
-import { createClient } from "@/lib/supabase/server";
-import { getMembership } from "@/lib/supabase/queries";
+import { getCurrentUser } from "@/lib/auth/session";
+import { getMembership } from "@/lib/db/queries";
 
 const t = getMessages("en");
 
@@ -16,10 +16,7 @@ export const metadata: Metadata = { title: t.onboarding.metaTitle };
 export const dynamic = "force-dynamic";
 
 export default async function OnboardingPage() {
-  const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  const user = await getCurrentUser();
 
   if (!user) redirect("/login");
 

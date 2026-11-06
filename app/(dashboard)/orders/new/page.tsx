@@ -11,8 +11,8 @@ import { getUserInitials } from "@/lib/dashboard/user";
 import { getMessages } from "@/lib/i18n";
 import { getDictionary } from "@/lib/i18n/locale";
 import { getOrderGate } from "@/lib/subscription";
-import { createClient } from "@/lib/supabase/server";
-import { getMembership } from "@/lib/supabase/queries";
+import { createClient } from "@/lib/db/server";
+import { getMembership } from "@/lib/db/queries";
 
 // Page titles are read once per server, so they stay in English.
 const tEn = getMessages("en");
@@ -37,12 +37,12 @@ export default async function NewOrderPage({
   const t = await getDictionary();
   const { conversation: conversationParam } = await searchParams;
   const membership = await getMembership();
-  const supabase = await createClient();
+  const db = await createClient();
   const initials = await getUserInitials();
 
   const gate = await getOrderGate(membership?.organizationId ?? "");
 
-  const { data } = await supabase
+  const { data } = await db
     .from("product_variants")
     .select("id, name, sku, stock, selling_price, products(name, is_active)")
     .eq("organization_id", membership?.organizationId ?? "")
@@ -75,7 +75,7 @@ export default async function NewOrderPage({
   let presetSource: string | undefined;
 
   if (conversationParam) {
-    const { data: conversation } = await supabase
+    const { data: conversation } = await db
       .from("conversations")
       .select("id, customer_id, channel_connections(provider), customers(id, name, phone, address, district)")
       .eq("id", conversationParam)

@@ -13,9 +13,9 @@ import { getUserInitials } from "@/lib/dashboard/user";
 import { getMessages } from "@/lib/i18n";
 import { getDictionary } from "@/lib/i18n/locale";
 import { getCustomerRisk } from "@/lib/risk/queries";
-import { createClient } from "@/lib/supabase/server";
-import { getMembership } from "@/lib/supabase/queries";
-import { getCurrentUser } from "@/lib/supabase/user";
+import { createClient } from "@/lib/db/server";
+import { getMembership } from "@/lib/db/queries";
+import { getCurrentUser } from "@/lib/auth/session";
 import { cn } from "@/lib/utils";
 
 // Page titles are read once per server, so they stay in English.
@@ -50,10 +50,10 @@ export default async function InboxPage({
   const { c: selectedId, status, q } = await searchParams;
   const membership = await getMembership();
   const organizationId = membership?.organizationId ?? "";
-  const supabase = await createClient();
+  const db = await createClient();
   const [initials, user] = await Promise.all([getUserInitials(), getCurrentUser()]);
 
-  const { data: connectionRows } = await supabase
+  const { data: connectionRows } = await db
     .from("channel_connections")
     .select("id, provider, label, is_active")
     .eq("organization_id", organizationId)
@@ -64,7 +64,7 @@ export default async function InboxPage({
 
   const activeStatus = STATUS_FILTERS.includes(status as (typeof STATUS_FILTERS)[number]) ? status : undefined;
 
-  let listQuery = supabase
+  let listQuery = db
     .from("conversations")
     .select(
       "id, external_id, contact_name, contact_handle, status, unread_count, last_message_at, last_message_preview, customer_id, assigned_to, channel_connection_id, created_at",
@@ -88,7 +88,7 @@ export default async function InboxPage({
   // on its own rather than picked out of the list.
   let selected: ConversationRow | null = null;
   if (selectedId) {
-    const { data } = await supabase
+    const { data } = await db
       .from("conversations")
       .select(
         "id, external_id, contact_name, contact_handle, status, unread_count, last_message_at, last_message_preview, customer_id, assigned_to, channel_connection_id, created_at",
@@ -101,7 +101,7 @@ export default async function InboxPage({
 
   let messages: ThreadMessage[] = [];
   if (selected) {
-    const { data } = await supabase
+    const { data } = await db
       .from("messages")
       .select("id, direction, author, body, attachments, delivery, error, sent_at, created_at")
       .eq("conversation_id", selected.id)
@@ -116,7 +116,7 @@ export default async function InboxPage({
     | null = null;
 
   if (selected?.customer_id) {
-    const { data } = await supabase
+    const { data } = await db
       .from("customers")
       .select("id, name, phone, district, orders(total, status)")
       .eq("id", selected.customer_id)
@@ -149,7 +149,7 @@ export default async function InboxPage({
 
   const assigneeNames = new Map<string, string>();
   if (assigneeIds.length > 0) {
-    const { data } = await supabase.from("profiles").select("id, full_name").in("id", assigneeIds);
+    const { data } = await db.from("profiles").select("id, full_name").in("id", assigneeIds);
     for (const row of data ?? []) {
       assigneeNames.set(row.id as string, (row.full_name as string | null) ?? "");
     }

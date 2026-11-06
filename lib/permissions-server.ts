@@ -4,7 +4,7 @@ import { redirect } from "next/navigation";
 
 import { getMessages } from "@/lib/i18n";
 import { can, isOwnerOnly, type Permission } from "@/lib/permissions";
-import { getMembership } from "@/lib/supabase/queries";
+import { getMembership } from "@/lib/db/queries";
 
 const t = getMessages("en");
 

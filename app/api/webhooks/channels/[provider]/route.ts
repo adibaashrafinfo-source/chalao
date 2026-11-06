@@ -2,7 +2,7 @@ import { timingSafeEqual } from "node:crypto";
 import { NextResponse, type NextRequest } from "next/server";
 
 import { getChannelAdapter } from "@/lib/channels/registry";
-import { createAdminClient, hasServiceRoleKey } from "@/lib/supabase/admin";
+import { createAdminClient, hasServiceRoleKey } from "@/lib/db/server";
 
 // Incoming messages from a channel. There is no user session here, so the request
 // authenticates itself with the per-connection webhook token and everything runs

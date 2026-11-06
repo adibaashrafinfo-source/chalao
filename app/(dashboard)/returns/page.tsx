@@ -10,7 +10,7 @@ import { formatBDT, formatCount } from "@/lib/format";
 import { getMessages } from "@/lib/i18n";
 import { getDictionary } from "@/lib/i18n/locale";
 import { getReturnsSummary, listReturns } from "@/lib/returns/queries";
-import { getMembership } from "@/lib/supabase/queries";
+import { getMembership } from "@/lib/db/queries";
 
 // Page titles are read once per server, so they stay in English.
 const tEn = getMessages("en");

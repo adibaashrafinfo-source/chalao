@@ -1,25 +1,35 @@
 import type { Metadata } from "next";
-import { Hind_Siliguri, Inter, Plus_Jakarta_Sans } from "next/font/google";
+import localFont from "next/font/local";
 import "./globals.css";
 
-const jakarta = Plus_Jakarta_Sans({
-  subsets: ["latin"],
-  weight: ["500", "600", "700"],
+// Fonts are files inside the app (app/fonts), so pages never call out to Google.
+const jakarta = localFont({
+  src: [
+    { path: "./fonts/plus-jakarta-sans-latin-500-normal.woff2", weight: "500", style: "normal" },
+    { path: "./fonts/plus-jakarta-sans-latin-600-normal.woff2", weight: "600", style: "normal" },
+    { path: "./fonts/plus-jakarta-sans-latin-700-normal.woff2", weight: "700", style: "normal" },
+  ],
   variable: "--font-jakarta",
   display: "swap",
 });
 
-const inter = Inter({
-  subsets: ["latin"],
-  weight: ["400", "500"],
+const inter = localFont({
+  src: [
+    { path: "./fonts/inter-latin-400-normal.woff2", weight: "400", style: "normal" },
+    { path: "./fonts/inter-latin-500-normal.woff2", weight: "500", style: "normal" },
+  ],
   variable: "--font-inter",
   display: "swap",
 });
 
 // Plus Jakarta Sans and Inter have no Bengali glyphs; this is the fallback for Bangla copy.
-const bangla = Hind_Siliguri({
-  subsets: ["bengali"],
-  weight: ["400", "500", "600", "700"],
+const bangla = localFont({
+  src: [
+    { path: "./fonts/hind-siliguri-bengali-400-normal.woff2", weight: "400", style: "normal" },
+    { path: "./fonts/hind-siliguri-bengali-500-normal.woff2", weight: "500", style: "normal" },
+    { path: "./fonts/hind-siliguri-bengali-600-normal.woff2", weight: "600", style: "normal" },
+    { path: "./fonts/hind-siliguri-bengali-700-normal.woff2", weight: "700", style: "normal" },
+  ],
   variable: "--font-bangla",
   display: "swap",
 });

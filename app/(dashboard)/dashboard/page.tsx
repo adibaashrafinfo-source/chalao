@@ -13,8 +13,8 @@ import { formatBDT, formatCount } from "@/lib/format";
 import { getMessages } from "@/lib/i18n";
 import { getDictionary } from "@/lib/i18n/locale";
 import { getOrderGate } from "@/lib/subscription";
-import { createClient } from "@/lib/supabase/server";
-import { getMembership } from "@/lib/supabase/queries";
+import { createClient } from "@/lib/db/server";
+import { getMembership } from "@/lib/db/queries";
 import { cn } from "@/lib/utils";
 
 // Page titles are read once per server, so they stay in English.
@@ -49,13 +49,13 @@ export default async function DashboardPage({
   const organizationId = membership?.organizationId ?? "";
   const initials = await getUserInitials();
 
-  const supabase = await createClient();
+  const db = await createClient();
   const [{ stats, chart }, alerts, brief, gate, { data: subscription }] = await Promise.all([
     getDashboardData(organizationId, range),
     getAlerts(organizationId),
     getMorningBrief(organizationId),
     getOrderGate(organizationId),
-    supabase
+    db
       .from("organization_subscriptions")
       .select("current_period_end")
       .eq("organization_id", organizationId)

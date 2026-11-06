@@ -9,8 +9,9 @@ import { getUserInitials } from "@/lib/dashboard/user";
 import { getMessages } from "@/lib/i18n";
 import { getDictionary } from "@/lib/i18n/locale";
 import { can } from "@/lib/permissions";
-import { createClient } from "@/lib/supabase/server";
-import { getMembership } from "@/lib/supabase/queries";
+import { createClient } from "@/lib/db/server";
+import { getMembership } from "@/lib/db/queries";
+import { siteUrl } from "@/lib/site-url";
 
 // Page titles are read once per server, so they stay in English.
 const tEn = getMessages("en");
@@ -22,10 +23,10 @@ export default async function ChannelsPage() {
   const t = await getDictionary();
   const membership = await getMembership();
   const organizationId = membership?.organizationId ?? "";
-  const supabase = await createClient();
+  const db = await createClient();
   const initials = await getUserInitials();
 
-  const { data, error } = await supabase
+  const { data, error } = await db
     .from("channel_connections")
     .select("id, provider, label, external_id, is_active, last_event_at, webhook_token")
     .eq("organization_id", organizationId)
@@ -36,7 +37,7 @@ export default async function ChannelsPage() {
   // One count per channel, for the card.
   const conversationCounts = new Map<string, number>();
   if (connections.length > 0) {
-    const { data: conversationRows } = await supabase
+    const { data: conversationRows } = await db
       .from("conversations")
       .select("channel_connection_id")
       .eq("organization_id", organizationId);
@@ -54,7 +55,7 @@ export default async function ChannelsPage() {
     credentialFields: adapter.credentialFields,
   }));
 
-  const webhookBaseUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000";
+  const webhookBaseUrl = siteUrl();
 
   return (
     <>

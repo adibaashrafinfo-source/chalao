@@ -31,8 +31,8 @@ import {
   orderStatusTone,
 } from "@/lib/orders/status";
 import { formatPhone } from "@/lib/phone";
-import { createClient } from "@/lib/supabase/server";
-import { getMembership } from "@/lib/supabase/queries";
+import { createClient } from "@/lib/db/server";
+import { getMembership } from "@/lib/db/queries";
 
 // Page titles are read once per server, so they stay in English.
 const tEn = getMessages("en");
@@ -90,10 +90,10 @@ export default async function OrderDetailPage({ params }: { params: Promise<{ id
   const { id } = await params;
   const membership = await getMembership();
   const organizationId = membership?.organizationId ?? "";
-  const supabase = await createClient();
+  const db = await createClient();
   const initials = await getUserInitials();
 
-  const { data: order } = await supabase
+  const { data: order } = await db
     .from("orders")
     .select(
       "id, order_number, status, source, subtotal, discount, delivery_charge, total, delivery_address, district, notes, created_at, conversation_id, customers(id, name, phone, address, district)",
@@ -120,13 +120,13 @@ export default async function OrderDetailPage({ params }: { params: Promise<{ id
   ]);
 
   const [{ data: itemRows }, { data: historyRows }] = await Promise.all([
-    supabase
+    db
       .from("order_items")
       .select("id, product_name, variant_name, unit_price, quantity, line_total")
       .eq("order_id", id)
       .eq("organization_id", organizationId)
       .order("created_at", { ascending: true }),
-    supabase
+    db
       .from("order_status_history")
       .select("id, from_status, to_status, note, created_at")
       .eq("order_id", id)
@@ -141,7 +141,7 @@ export default async function OrderDetailPage({ params }: { params: Promise<{ id
   const detailsEditable = isOrderEditable(status);
 
   // Shipment for this order, plus the courier updates that came in for it.
-  const { data: shipmentRow } = await supabase
+  const { data: shipmentRow } = await db
     .from("shipments")
     .select(
       "id, provider, consignment_id, tracking_code, status, cod_amount, recipient_name, recipient_phone, recipient_address, created_at",
@@ -154,7 +154,7 @@ export default async function OrderDetailPage({ params }: { params: Promise<{ id
 
   let shipmentEvents: ShipmentEventRow[] = [];
   if (shipment) {
-    const { data } = await supabase
+    const { data } = await db
       .from("shipment_events")
       .select("id, provider_status, mapped_status, occurred_at")
       .eq("shipment_id", shipment.id)
@@ -166,7 +166,7 @@ export default async function OrderDetailPage({ params }: { params: Promise<{ id
   // Courier choices, only needed when the order is waiting to be booked.
   let courierAccounts: CourierChoice[] = [];
   if (status === "ready_to_ship") {
-    const { data } = await supabase
+    const { data } = await db
       .from("courier_accounts")
       .select("id, provider, label")
       .eq("organization_id", organizationId)
@@ -182,7 +182,7 @@ export default async function OrderDetailPage({ params }: { params: Promise<{ id
   // Only needed while items can still change.
   let variants: VariantOption[] = [];
   if (itemsEditable) {
-    const { data } = await supabase
+    const { data } = await db
       .from("product_variants")
       .select("id, name, sku, stock, selling_price, products(name)")
       .eq("organization_id", organizationId)

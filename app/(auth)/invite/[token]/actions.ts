@@ -3,7 +3,7 @@
 import { redirect } from "next/navigation";
 
 import { getMessages } from "@/lib/i18n";
-import { createClient } from "@/lib/supabase/server";
+import { createClient } from "@/lib/db/server";
 
 const t = getMessages("en");
 
@@ -21,8 +21,8 @@ const KNOWN_CODES = [
 ] as const;
 
 export async function acceptInvitationAction(token: string): Promise<AcceptResult> {
-  const supabase = await createClient();
-  const { error } = await supabase.rpc("accept_invitation", { p_token: token });
+  const db = await createClient();
+  const { error } = await db.rpc("accept_invitation", { p_token: token });
 
   if (error) {
     const code = KNOWN_CODES.find((known) => error.message.includes(known));

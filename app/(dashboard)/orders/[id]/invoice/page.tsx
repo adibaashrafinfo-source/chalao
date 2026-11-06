@@ -9,8 +9,8 @@ import { formatBDT } from "@/lib/format";
 import { getMessages } from "@/lib/i18n";
 import { getDictionary } from "@/lib/i18n/locale";
 import { formatPhone } from "@/lib/phone";
-import { createClient } from "@/lib/supabase/server";
-import { getMembership } from "@/lib/supabase/queries";
+import { createClient } from "@/lib/db/server";
+import { getMembership } from "@/lib/db/queries";
 
 // Page titles are read once per server, so they stay in English.
 const tEn = getMessages("en");
@@ -28,10 +28,10 @@ export default async function InvoicePage({ params }: { params: Promise<{ id: st
   const membership = await getMembership();
   if (!membership) redirect("/onboarding");
 
-  const supabase = await createClient();
+  const db = await createClient();
 
   const [{ data: order }, { data: organization }, { data: itemRows }] = await Promise.all([
-    supabase
+    db
       .from("orders")
       .select(
         "id, order_number, status, subtotal, discount, delivery_charge, total, delivery_address, district, notes, created_at, customers(name, phone, address, district)",
@@ -39,12 +39,12 @@ export default async function InvoicePage({ params }: { params: Promise<{ id: st
       .eq("id", id)
       .eq("organization_id", membership.organizationId)
       .maybeSingle(),
-    supabase
+    db
       .from("organizations")
       .select("name, phone, address, logo_url")
       .eq("id", membership.organizationId)
       .maybeSingle(),
-    supabase
+    db
       .from("order_items")
       .select("id, product_name, variant_name, unit_price, quantity, line_total")
       .eq("order_id", id)
