@@ -19,10 +19,10 @@ export function DeleteCustomerButton({
   /** Staff keep the customer; only a manager or the owner removes one. */
   canDelete: boolean;
 }) {
-  if (!canDelete) return null;
-
   const [error, setError] = useState<string | null>(null);
   const [pending, setPending] = useState(false);
+
+  if (!canDelete) return null;
 
   return (
     <Dialog>
